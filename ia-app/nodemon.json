@@ -1,0 +1,10 @@
+{
+  "watch": ["server.js", "pptx-builder.js"],
+  "ext": "js",
+  "ignore": ["public/*", "node_modules/*", "certs/*"],
+  "exec": "node server.js",
+  "env": {
+    "NODE_EXTRA_CA_CERTS": "C:\\Users\\User\\Desktop\\CATERG CODE\\audit\\ia-app\\certs\\avast-root-ca.pem"
+  },
+  "delay": 300
+}

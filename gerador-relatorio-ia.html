@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Relatório de Auditoria de IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f5f8;
+    --surface: #ffffff;
+    --surface-2: #e7e9f0;
+    --ink: #10182b;
+    --muted: #5b6376;
+    --border: #d7dae4;
+    --primary: #142a52;
+    --primary-ink: #ffffff;
+    --accent: #2f6fed;
+    --accent-soft: #e4ecff;
+    --quickwin: #1f8a5f;
+    --quickwin-soft: #e3f5ec;
+    --major: #2f6fed;
+    --major-soft: #e4ecff;
+    --filler: #b8860b;
+    --filler-soft: #fbf0d9;
+    --avoid: #b64a3c;
+    --avoid-soft: #fbe7e2;
+    --shadow: 0 1px 2px rgba(16,24,43,0.04), 0 8px 24px rgba(16,24,43,0.06);
+    --display: 'Archivo', 'Arial Black', sans-serif;
+    --body: 'Source Sans 3', 'Segoe UI', sans-serif;
+    --mono: 'IBM Plex Mono', 'Consolas', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0b1220;
+      --surface: #121b2e;
+      --surface-2: #182338;
+      --ink: #eef1f8;
+      --muted: #97a1b8;
+      --border: #26314a;
+      --primary: #5b8cff;
+      --primary-ink: #0b1220;
+      --accent: #6d9bff;
+      --accent-soft: rgba(109,155,255,0.14);
+      --quickwin: #3ddc97;
+      --quickwin-soft: rgba(61,220,151,0.14);
+      --major: #6d9bff;
+      --major-soft: rgba(109,155,255,0.14);
+      --filler: #e0b04b;
+      --filler-soft: rgba(224,176,75,0.14);
+      --avoid: #e0776a;
+      --avoid-soft: rgba(224,119,106,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0b1220;
+    --surface: #121b2e;
+    --surface-2: #182338;
+    --ink: #eef1f8;
+    --muted: #97a1b8;
+    --border: #26314a;
+    --primary: #5b8cff;
+    --primary-ink: #0b1220;
+    --accent: #6d9bff;
+    --accent-soft: rgba(109,155,255,0.14);
+    --quickwin: #3ddc97;
+    --quickwin-soft: rgba(61,220,151,0.14);
+    --major: #6d9bff;
+    --major-soft: rgba(109,155,255,0.14);
+    --filler: #e0b04b;
+    --filler-soft: rgba(224,176,75,0.14);
+    --avoid: #e0776a;
+    --avoid-soft: rgba(224,119,106,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 96px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1.title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.08;
+    margin: 0 0 10px;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .subtitle { color: var(--muted); font-size: 16px; max-width: 62ch; margin: 0 0 32px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- input panel ---- */
+  .panel { padding: 28px; margin-bottom: 20px; }
+  .panel h2 {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 640px) { .field-row { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  input[type="text"], input[type="number"], textarea {
+    width: 100%;
+    font-family: var(--body);
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 13px;
+  }
+  input:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  textarea {
+    min-height: 220px;
+    resize: vertical;
+    font-family: var(--body);
+    line-height: 1.6;
+  }
+  .hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+  .hint code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  .actions { display: flex; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+  button.primary {
+    font-family: var(--body);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary-ink);
+    background: var(--primary);
+    border: none;
+    border-radius: 10px;
+    padding: 13px 24px;
+    cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button.secondary {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    cursor: pointer;
+  }
+  button.secondary:hover { background: var(--surface-2); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status-msg { font-size: 13px; color: var(--muted); }
+  .status-msg.error { color: var(--avoid); }
+
+  /* ---- report ---- */
+  #report { margin-top: 36px; }
+  #report[hidden] { display: none; }
+
+  .report-head {
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+    padding-bottom: 18px; margin-bottom: 24px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .report-head .co { font-family: var(--display); font-weight: 800; font-size: 22px; }
+  .report-head .date { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+
+  .exec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 640px) { .exec-grid { grid-template-columns: 1fr; } }
+  .exec-card { padding: 22px; }
+  .exec-card .tag {
+    display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 6px; margin-bottom: 10px;
+  }
+  .exec-card.dor .tag { background: var(--avoid-soft); color: var(--avoid); }
+  .exec-card.resultado .tag { background: var(--quickwin-soft); color: var(--quickwin); }
+  .exec-card p { margin: 0; font-size: 15px; color: var(--ink); }
+
+  .stat-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 640px) { .stat-hero { grid-template-columns: 1fr; } }
+  .stat-tile { padding: 24px; text-align: center; }
+  .stat-tile .num {
+    font-family: var(--mono); font-weight: 600; font-size: 40px; color: var(--primary);
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .stat-tile .num .unit { font-size: 18px; color: var(--muted); margin-left: 6px; }
+  .stat-tile .label { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  .matrix {
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px;
+    margin-bottom: 8px; min-height: 260px;
+  }
+  @media (max-width: 640px) { .matrix { grid-template-columns: 1fr; grid-template-rows: none; } }
+  .quad { border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+  .quad .qtitle { font-weight: 700; font-size: 14px; margin: 0 0 4px; }
+  .quad .qsub { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+  .quad ul { margin: 0; padding-left: 18px; font-size: 13px; }
+  .quad li { margin-bottom: 4px; }
+  .quad.qw { background: var(--quickwin-soft); border-color: var(--quickwin); }
+  .quad.qw .qtitle { color: var(--quickwin); }
+  .quad.major { background: var(--major-soft); border-color: var(--major); }
+  .quad.major .qtitle { color: var(--major); }
+  .quad.filler { background: var(--filler-soft); border-color: var(--filler); }
+  .quad.filler .qtitle { color: var(--filler); }
+  .quad.avoid { background: var(--avoid-soft); border-color: var(--avoid); }
+  .quad.avoid .qtitle { color: var(--avoid); }
+  .matrix-note { font-size: 13px; color: var(--muted); margin: 0 0 20px; }
+
+  .sol-card { padding: 22px; margin-bottom: 14px; }
+  .sol-card .pain { font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+  .sol-card .tool { font-family: var(--display); font-weight: 700; font-size: 19px; margin: 0 0 8px; color: var(--ink); }
+  .sol-card .why { font-size: 14px; color: var(--ink); margin: 0 0 16px; }
+  .sol-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .sol-meta { grid-template-columns: 1fr 1fr; } }
+  .sol-meta .m-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 3px; }
+  .sol-meta .m-val { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px; }
+  @media (max-width: 640px) { .timeline { grid-template-columns: 1fr; } }
+  .day { padding: 16px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
+  .day .dnum { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+  .day .dtask { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .day .dtool { font-size: 12px; color: var(--muted); }
+
+  .next-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .next-list li { display: flex; gap: 14px; align-items: flex-start; }
+  .next-list .n { font-family: var(--mono); font-weight: 600; color: var(--accent); font-size: 14px; min-width: 22px; }
+  .next-list .ntext strong { display: block; font-size: 14px; margin-bottom: 2px; }
+  .next-list .ntext span { font-size: 13px; color: var(--muted); }
+
+  .fin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .fin-table td { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .fin-table td:last-child { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .fin-table tr.total td { border-bottom: none; border-top: 2px solid var(--ink); padding-top: 14px; font-weight: 700; font-size: 16px; }
+  .fin-table tr.total td:last-child { color: var(--quickwin); }
+
+  section.report-block { margin-bottom: 30px; }
+
+  .footnote { font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 16px; margin-top: 30px; }
+  .footnote strong { color: var(--ink); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+
+  @media print {
+    .panel, .actions, .no-print { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Auditoria de IA · CATERG</p>
+  <h1 class="title">Gerador de Relatório de Auditoria de IA</h1>
+  <p class="subtitle">Cole a transcrição da entrevista de assessment. O app identifica os pontos de perda de tempo e dinheiro e monta o relatório de oportunidades de automação — no mesmo formato do modelo em PPTX.</p>
+
+  <div class="card panel">
+    <h2>Dados da entrevista</h2>
+    <div class="field-row">
+      <div>
+        <label for="companyName">Nome da empresa</label>
+        <input type="text" id="companyName" placeholder="Ex.: Rota Livre Motorhomes">
+      </div>
+      <div>
+        <label for="hourlyCost">Custo médio da hora da equipe (R$)</label>
+        <input type="number" id="hourlyCost" value="60" min="0" step="5">
+      </div>
+    </div>
+    <label for="transcript">Transcrição da reunião</label>
+    <textarea id="transcript" placeholder="Cole aqui a transcrição completa da entrevista de assessment..."></textarea>
+    <p class="hint">O app procura na transcrição sinais de 10 categorias de dor (orçamento, WhatsApp/status, reuniões, e-mail, homologação, produção, pós-venda, marketing, design, sistemas dispersos) e recomenda ferramentas para cada uma. Curadoria própria, referenciando categorias do <code>Futurepedia</code> e do <code>There's An AI For That</code> — não é uma busca ao vivo nesses sites.</p>
+    <div class="actions">
+      <button class="primary" id="generateBtn">Gerar relatório</button>
+      <button class="secondary" id="downloadBtn" hidden>Baixar relatório (HTML)</button>
+      <span class="status-msg" id="statusMsg"></span>
+    </div>
+  </div>
+
+  <div id="report" hidden></div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DB = [
+    { id:'orcamento', pain:'Orçamento manual e demorado', keywords:['orcamento','cotacao','cotar','calcular material','planilha de preco','margem de lucro','fazer proposta'],
+      tool:'Quoter', why:'Monta a cotação a partir de um catálogo de itens e preços pré-cadastrados, aplica a margem automaticamente e gera a proposta em minutos, sem abrir planilha.',
+      complexity:'Algum setup', cost:'R$ 550/mês', costNum:550, setup:'2–3 horas', hours:5, effort:'baixo' },
+    { id:'whatsapp', pain:'Cliente cobrando status por WhatsApp', keywords:['whatsapp','status do projeto','como esta','como ta','quando fica pronto','andamento do projeto','acompanhamento do pedido'],
+      tool:'Zaia', why:'Assistente de IA para WhatsApp que responde perguntas de status consultando o andamento real do projeto, liberando a equipe das mensagens repetitivas.',
+      complexity:'Plug-and-play', cost:'R$ 300/mês', costNum:300, setup:'30 minutos', hours:4, effort:'baixo' },
+    { id:'reuniao', pain:'Reuniões sem registro de itens de ação', keywords:['reuniao','ata da reuniao','itens de acao','gravar a chamada','call com cliente'],
+      tool:'Fathom.ai', why:'Entra automaticamente nas chamadas, transcreve e extrai os itens de ação, para que nada se perca depois da reunião.',
+      complexity:'Plug-and-play', cost:'R$ 0–55/usuário', costNum:30, setup:'15 minutos', hours:2, effort:'baixo' },
+    { id:'email', pain:'Caixa de entrada com ruído', keywords:['e-mail','email','caixa de entrada','inbox'],
+      tool:'SaneBox', why:'Aprende quais e-mails realmente importam e separa o resto automaticamente, sem mudar o fluxo de trabalho.',
+      complexity:'Plug-and-play', cost:'R$ 40/mês', costNum:40, setup:'10 minutos', hours:3, effort:'baixo' },
+    { id:'homologacao', pain:'Homologação e documentação dispersas', keywords:['homologacao','documentacao','memorial descritivo','checklist','cat ','csv ','detran','senatran'],
+      tool:'Airtable + IA', why:'Centraliza documentos, fotos e checklist de homologação por veículo, com lembretes automáticos do que falta — acaba com a correria de última hora.',
+      complexity:'Algum setup', cost:'R$ 180/mês', costNum:180, setup:'3 horas', hours:3, effort:'baixo' },
+    { id:'producao', pain:'Retrabalho na comunicação com a produção', keywords:['retrabalho','producao','medida errada','passar o projeto','print de whatsapp','errar medida'],
+      tool:'ClickUp', why:'Registra o pedido de cada cliente em uma tarefa única e visível para a produção, eliminando erro de telefone-sem-fio entre vendas e oficina.',
+      complexity:'Algum setup', cost:'R$ 250/mês', costNum:250, setup:'2 horas', hours:2, effort:'baixo' },
+    { id:'posvenda', pain:'Dúvidas repetitivas no pós-venda', keywords:['pos-venda','pos venda','duvida','manutencao','mesma pergunta','assistencia tecnica'],
+      tool:'Chatbase', why:'Um assistente treinado com o manual e as dúvidas mais comuns responde o cliente na hora, 24 horas por dia.',
+      complexity:'Algum setup', cost:'R$ 150/mês', costNum:150, setup:'3 horas', hours:3, effort:'baixo' },
+    { id:'marketing', pain:'Relatórios manuais de marketing', keywords:['relatorio de marketing','redes sociais','metricas','instagram','anuncio','trafego pago'],
+      tool:'DashThis', why:'Consolida os dados de redes e anúncios em um painel que se atualiza sozinho, sem montar relatório manual.',
+      complexity:'Algum setup', cost:'R$ 230/mês', costNum:230, setup:'1–2 horas', hours:2, effort:'baixo' },
+    { id:'design', pain:'Design recorrente tomando tempo estratégico', keywords:['design','arte grafica','banner','criativo para'],
+      tool:'Canva Magic Design', why:'Cria templates com a identidade da marca uma vez, e a equipe reaproveita sem depender da liderança para cada peça.',
+      complexity:'Algum setup', cost:'R$ 0 (já usa)', costNum:0, setup:'1–2 horas', hours:2, effort:'baixo' },
+    { id:'sistema', pain:'Sistema/ERP disperso ou abandonado', keywords:['erp','sistema que ninguem usava','ferramenta abandonada','tudo espalhado','solto em planilha'],
+      tool:'GoHighLevel (CRM)', why:'Substitui a colcha de retalhos de planilha e WhatsApp por um CRM único, adaptado à realidade da equipe e implantado aos poucos.',
+      complexity:'Alto esforço', cost:'R$ 500/mês', costNum:500, setup:'2–3 semanas', hours:4, effort:'alto' }
+  ];
+
+  function normalize(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  function analyze(text) {
+    var norm = normalize(text);
+    var found = [];
+    DB.forEach(function (cat) {
+      var mentions = 0;
+      cat.keywords.forEach(function (kw) {
+        var re = new RegExp(normalize(kw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        var m = norm.match(re);
+        if (m) mentions += m.length;
+      });
+      if (mentions > 0) {
+        found.push(Object.assign({}, cat, { mentions: mentions, score: cat.hours * (1 + Math.min(mentions, 5) * 0.15) }));
+      }
+    });
+    found.sort(function (a, b) { return b.score - a.score; });
+    return found;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function money(n) {
+    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function buildReportHtml(data, forExport) {
+    var found = data.found, top = data.top, others = data.others;
+    var totalHours = data.totalHours, monthlyCost = data.monthlyCost, hourlyCost = data.hourlyCost;
+    var monthlyRecovered = totalHours * 4.33 * hourlyCost;
+    var netRoi = monthlyRecovered - monthlyCost;
+    var dateStr = new Date().toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    var painList = top.map(function (c) { return c.pain.toLowerCase(); });
+    var dorText = painList.length
+      ? ('Os pontos que mais consomem tempo e dinheiro hoje: ' + painList.slice(0, 3).join('; ') + (painList.length > 3 ? '; entre outros.' : '.'))
+      : 'Nenhum ponto de dor claro foi identificado automaticamente — revise a transcrição ou detalhe mais os processos manuais.';
+    var resultadoText = top.length
+      ? ('Aplicar as ferramentas recomendadas pode devolver cerca de ' + totalHours + ' horas por semana à equipe, com um investimento mensal estimado de ' + money(monthlyCost) + '.')
+      : 'Assim que os pontos de dor forem identificados, o relatório estima o tempo recuperável e o investimento necessário.';
+
+    var quickWins = found.filter(function (c) { return c.effort === 'baixo'; });
+    var majorProjects = found.filter(function (c) { return c.effort === 'alto' && c.hours >= 3; });
+
+    function quadList(list, emptyMsg) {
+      if (!list.length) return '<p style="font-size:13px;color:var(--muted);margin:0;">' + emptyMsg + '</p>';
+      return '<ul>' + list.map(function (c, i) { return '<li>' + (i + 1) + '. ' + esc(c.pain) + ' — <strong>' + esc(c.tool) + '</strong></li>'; }).join('') + '</ul>';
+    }
+
+    var matrixHtml =
+      '<div class="matrix">' +
+        '<div class="quad qw"><p class="qtitle">Quick Wins</p><p class="qsub">Alto impacto, baixo esforço</p>' + quadList(quickWins, 'Nenhum identificado ainda.') + '</div>' +
+        '<div class="quad major"><p class="qtitle">Projetos Maiores</p><p class="qsub">Alto impacto, alto esforço</p>' + quadList(majorProjects, 'Nenhum identificado ainda.') + '</div>' +
+        '<div class="quad filler"><p class="qtitle">Preenchimentos</p><p class="qsub">Baixo impacto, baixo esforço</p><p style="font-size:13px;color:var(--muted);margin:0;">Não priorizado neste ciclo.</p></div>' +
+        '<div class="quad avoid"><p class="qtitle">Ignorar</p><p class="qsub">Baixo impacto, alto esforço</p><p style="font-size:13px;color:var(--muted);margin:0;">Não priorizado neste ciclo.</p></div>' +
+      '</div>';
+
+    var solutionsHtml = top.map(function (c) {
+      return '<div class="card sol-card">' +
+        '<p class="pain">' + esc(c.pain) + '</p>' +
+        '<p class="tool">' + esc(c.tool) + '</p>' +
+        '<p class="why">' + esc(c.why) + '</p>' +
+        '<div class="sol-meta">' +
+          '<div><div class="m-label">Complexidade</div><div class="m-val">' + esc(c.complexity) + '</div></div>' +
+          '<div><div class="m-label">Custo mensal</div><div class="m-val">' + esc(c.cost) + '</div></div>' +
+          '<div><div class="m-label">Tempo de setup</div><div class="m-val">' + esc(c.setup) + '</div></div>' +
+          '<div><div class="m-label">Tempo economizado</div><div class="m-val">' + c.hours + ' h/semana</div></div>' +
+        '</div></div>';
+    }).join('');
+
+    var dayNames = ['Dia 1', 'Dia 2', 'Dia 3', 'Dia 4'];
+    var timelineHtml = '<div class="timeline">' + top.slice(0, 4).map(function (c, i) {
+      return '<div class="day"><div class="dnum">' + dayNames[i] + '</div><div class="dtask">Configurar ' + esc(c.tool) + '</div><div class="dtool">Resolve: ' + esc(c.pain) + '</div></div>';
+    }).join('') + '</div>';
+
+    var nextItems = others.slice(0, 3);
+    var nextHtml = nextItems.length
+      ? '<ul class="next-list">' + nextItems.map(function (c, i) {
+          return '<li><span class="n">' + String(i + 1).padStart(2, '0') + '</span><div class="ntext"><strong>' + esc(c.tool) + '</strong><span>' + esc(c.pain) + '</span></div></li>';
+        }).join('') + '</ul>'
+      : '<p style="font-size:13px;color:var(--muted);margin:0;">Sem pontos adicionais identificados nesta transcrição — foque em consolidar os quick wins antes de investir em projetos maiores.</p>';
+
+    var finRows =
+      '<tr><td>Horas recuperadas por semana</td><td>' + totalHours + ' h</td></tr>' +
+      '<tr><td>Custo médio da hora da equipe</td><td>' + money(hourlyCost) + '</td></tr>' +
+      '<tr><td>Valor recuperado por mês (' + totalHours + 'h × 4,33 semanas)</td><td>' + money(Math.round(monthlyRecovered)) + '</td></tr>' +
+      '<tr><td>Custo mensal das ferramentas recomendadas</td><td>-' + money(Math.round(monthlyCost)) + '</td></tr>' +
+      '<tr class="total"><td>Resultado líquido mensal estimado</td><td>' + money(Math.round(netRoi)) + '</td></tr>';
+
+    var companyLabel = data.companyName ? esc(data.companyName) : 'Empresa não informada';
+
+    var html = '' +
+      '<div class="report-head"><div class="co">' + companyLabel + '</div><div class="date">Avaliação de ' + esc(dateStr) + '</div></div>' +
+
+      '<section class="report-block"><p class="section-label">Resumo Executivo</p>' +
+        '<div class="exec-grid">' +
+          '<div class="card exec-card dor"><span class="tag">Dor</span><p>' + esc(dorText) + '</p></div>' +
+          '<div class="card exec-card resultado"><span class="tag">Resultado</span><p>' + esc(resultadoText) + '</p></div>' +
+        '</div></section>' +
+
+      '<section class="report-block"><p class="section-label">A Oportunidade em um Relance</p>' +
+        '<div class="stat-hero">' +
+          '<div class="card stat-tile"><div class="num">' + totalHours + '<span class="unit">h/semana</span></div><div class="label">Horas recuperáveis</div></div>' +
+          '<div class="card stat-tile"><div class="num">' + money(Math.round(netRoi)) + '</div><div class="label">ROI líquido mensal estimado</div></div>' +
+        '</div></section>' +
+
+      '<section class="report-block"><p class="section-label">Matriz Impacto × Esforço</p>' +
+        '<p class="matrix-note">Pontos de dor identificados na transcrição, priorizados por impacto no negócio e esforço de implementação.</p>' +
+        matrixHtml + '</section>' +
+
+      '<section class="report-block"><p class="section-label">Soluções Recomendadas</p>' + (solutionsHtml || '<p class="empty-state">Nenhuma solução recomendada — nenhum ponto de dor foi reconhecido na transcrição.</p>') + '</section>' +
+
+      (top.length ? ('<section class="report-block"><p class="section-label">Seu Plano de Quick Wins em 4 Dias</p>' + timelineHtml + '</section>') : '') +
+
+      '<section class="report-block"><p class="section-label">O Que Vem Depois dos Quick Wins</p>' + nextHtml + '</section>' +
+
+      '<section class="report-block"><p class="section-label">Impacto Financeiro</p>' +
+        '<div class="card" style="padding:22px;"><table class="fin-table">' + finRows + '</table></div></section>' +
+
+      '<p class="footnote"><strong>Sobre a curadoria de ferramentas:</strong> as recomendações vêm de uma base própria organizada por categoria de dor, referenciando o tipo de solução listado em diretórios como Futurepedia e There’s An AI For That. Não é uma busca ao vivo nesses sites — preços e ferramentas mudam com frequência, então vale conferir a oferta atual antes de fechar contratação.</p>';
+
+    return html;
+  }
+
+  var transcriptEl = document.getElementById('transcript');
+  var companyEl = document.getElementById('companyName');
+  var hourlyEl = document.getElementById('hourlyCost');
+  var generateBtn = document.getElementById('generateBtn');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var statusMsg = document.getElementById('statusMsg');
+  var reportEl = document.getElementById('report');
+  var lastReportHtml = '';
+  var lastCompanyName = '';
+
+  function setStatus(msg, isError) {
+    statusMsg.textContent = msg || '';
+    statusMsg.className = 'status-msg' + (isError ? ' error' : '');
+  }
+
+  generateBtn.addEventListener('click', function () {
+    var text = transcriptEl.value.trim();
+    if (text.length < 40) {
+      setStatus('Cole uma transcrição mais completa antes de gerar o relatório.', true);
+      return;
+    }
+    var hourlyCost = parseFloat(hourlyEl.value) || 0;
+    var found = analyze(text);
+    var top = found.filter(function (c) { return c.effort === 'baixo'; }).slice(0, 4);
+    var usedIds = top.map(function (c) { return c.id; });
+    var others = found.filter(function (c) { return usedIds.indexOf(c.id) === -1; });
+    var totalHours = top.reduce(function (sum, c) { return sum + c.hours; }, 0);
+    var monthlyCost = top.reduce(function (sum, c) { return sum + c.costNum; }, 0);
+
+    var data = {
+      companyName: companyEl.value.trim(),
+      found: found, top: top, others: others,
+      totalHours: totalHours, monthlyCost: monthlyCost, hourlyCost: hourlyCost
+    };
+
+    lastReportHtml = buildReportHtml(data);
+    lastCompanyName = data.companyName || 'empresa';
+    reportEl.innerHTML = lastReportHtml;
+    reportEl.hidden = false;
+    downloadBtn.hidden = false;
+    setStatus(found.length ? (found.length + ' ponto(s) de dor identificados.') : 'Nenhum ponto de dor reconhecido — revise a transcrição.', !found.length);
+    reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  downloadBtn.addEventListener('click', function () {
+    if (!lastReportHtml) return;
+    downloadBtn.disabled = true;
+    var fullDoc = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">' +
+      '<title>Relatório de Auditoria de IA — ' + esc(lastCompanyName) + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">' +
+      '<style>' + document.querySelector('style').textContent + 'body{padding:40px 24px;}</style></head><body><div class="wrap" style="padding:0;">' +
+      lastReportHtml + '</div></body></html>';
+
+    function done() { downloadBtn.disabled = false; }
+
+    claude.use('downloads').then(function (downloads) {
+      if (!downloads) { fallbackDownload(fullDoc); done(); return; }
+      var fname = 'relatorio-auditoria-ia-' + (lastCompanyName || 'empresa').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.html';
+      downloads.save({ filename: fname, data: fullDoc }).then(function () {
+        setStatus('Relatório baixado.', false);
+        done();
+      }).catch(function (err) {
+        if (err && err.code === 'declined') { done(); return; }
+        fallbackDownload(fullDoc);
+        done();
+      });
+    }).catch(function () { fallbackDownload(fullDoc); done(); });
+  });
+
+  function fallbackDownload(html) {
+    var blob = new Blob([html], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'relatorio-auditoria-ia.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+})();
+</script>
+</body>
+</html>

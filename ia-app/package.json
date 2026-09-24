@@ -1,0 +1,20 @@
+{
+  "name": "auditoria-ia-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Entrevista de assessment com IA real + geração de relatório de oportunidades de automação, com busca web para pesquisar ferramentas de IA.",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon",
+    "start:once": "node start.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pptxgenjs": "^4.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

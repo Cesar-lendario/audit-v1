@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrevista Guiada de IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f5f8;
+    --surface: #ffffff;
+    --surface-2: #e7e9f0;
+    --ink: #10182b;
+    --muted: #5b6376;
+    --border: #d7dae4;
+    --primary: #142a52;
+    --primary-ink: #ffffff;
+    --accent: #2f6fed;
+    --accent-soft: #e4ecff;
+    --bot-bubble: #ffffff;
+    --user-bubble: #142a52;
+    --user-bubble-ink: #ffffff;
+    --quickwin: #1f8a5f;
+    --quickwin-soft: #e3f5ec;
+    --shadow: 0 1px 2px rgba(16,24,43,0.04), 0 8px 24px rgba(16,24,43,0.06);
+    --display: 'Archivo', 'Arial Black', sans-serif;
+    --body: 'Source Sans 3', 'Segoe UI', sans-serif;
+    --mono: 'IBM Plex Mono', 'Consolas', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0b1220;
+      --surface: #121b2e;
+      --surface-2: #182338;
+      --ink: #eef1f8;
+      --muted: #97a1b8;
+      --border: #26314a;
+      --primary: #5b8cff;
+      --primary-ink: #0b1220;
+      --accent: #6d9bff;
+      --accent-soft: rgba(109,155,255,0.14);
+      --bot-bubble: #182338;
+      --user-bubble: #5b8cff;
+      --user-bubble-ink: #0b1220;
+      --quickwin: #3ddc97;
+      --quickwin-soft: rgba(61,220,151,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0b1220;
+    --surface: #121b2e;
+    --surface-2: #182338;
+    --ink: #eef1f8;
+    --muted: #97a1b8;
+    --border: #26314a;
+    --primary: #5b8cff;
+    --primary-ink: #0b1220;
+    --accent: #6d9bff;
+    --accent-soft: rgba(109,155,255,0.14);
+    --bot-bubble: #182338;
+    --user-bubble: #5b8cff;
+    --user-bubble-ink: #0b1220;
+    --quickwin: #3ddc97;
+    --quickwin-soft: rgba(61,220,151,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 8px;
+  }
+  h1.title {
+    font-family: var(--display); font-weight: 800; font-size: clamp(24px, 4vw, 32px);
+    line-height: 1.1; margin: 0 0 8px; text-wrap: balance;
+  }
+  .subtitle { color: var(--muted); font-size: 15px; max-width: 60ch; margin: 0 0 24px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
+
+  /* intro form */
+  #intro { padding: 26px; margin-bottom: 20px; }
+  #intro h2 { font-family: var(--display); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--muted); margin: 0 0 16px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  input[type="text"] {
+    width: 100%; font-family: var(--body); font-size: 15px; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px;
+  }
+  input:focus, button:focus-visible, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary {
+    font-family: var(--body); font-weight: 700; font-size: 15px; color: var(--primary-ink);
+    background: var(--primary); border: none; border-radius: 10px; padding: 13px 24px; cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary {
+    font-family: var(--body); font-weight: 600; font-size: 14px; color: var(--ink);
+    background: transparent; border: 1px solid var(--border); border-radius: 10px; padding: 11px 18px; cursor: pointer;
+  }
+  button.secondary:hover { background: var(--surface-2); }
+
+  /* chat */
+  #chatCard { padding: 0; display: none; overflow: hidden; margin-bottom: 20px; }
+  .chat-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .chat-head .block-label { font-family: var(--mono); font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+  .chat-head .progress { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #messages { padding: 20px; display: flex; flex-direction: column; gap: 12px; max-height: 480px; overflow-y: auto; }
+  .msg { display: flex; }
+  .msg.bot { justify-content: flex-start; }
+  .msg.user { justify-content: flex-end; }
+  .bubble { max-width: 82%; padding: 12px 15px; border-radius: 14px; font-size: 15px; }
+  .msg.bot .bubble { background: var(--bot-bubble); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.user .bubble { background: var(--user-bubble); color: var(--user-bubble-ink); border-bottom-right-radius: 4px; }
+  .chat-input { display: flex; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); }
+  .chat-input textarea {
+    flex: 1; font-family: var(--body); font-size: 15px; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; resize: none; min-height: 46px; max-height: 140px;
+  }
+
+  /* transcript output */
+  #outputCard { padding: 26px; display: none; }
+  #outputCard h2 { font-family: var(--display); font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+  #outputCard .meta { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
+  #transcriptText {
+    font-family: var(--mono); font-size: 13px; white-space: pre-wrap; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 16px; max-height: 420px; overflow-y: auto; margin: 0 0 18px;
+  }
+  .out-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .status-msg { font-size: 13px; color: var(--muted); }
+  .next-hint {
+    margin-top: 18px; padding: 14px 16px; border-radius: 10px; background: var(--quickwin-soft);
+    border: 1px solid var(--quickwin); font-size: 13px; color: var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Entrevista de Assessment · CATERG</p>
+  <h1 class="title">Entrevista Guiada de IA</h1>
+  <p class="subtitle">Conversa passo a passo com base no roteiro de assessment. Ao final, gera a transcrição formatada — pronta para colar no <strong>Gerador de Relatório de Auditoria de IA</strong>.</p>
+
+  <div class="card" id="intro">
+    <h2>Antes de começar</h2>
+    <div class="field-row">
+      <div>
+        <label for="companyName">Nome da empresa</label>
+        <input type="text" id="companyName" placeholder="Ex.: Rota Livre Motorhomes">
+      </div>
+      <div>
+        <label for="respName">Nome de quem vai responder</label>
+        <input type="text" id="respName" placeholder="Ex.: Marcos">
+      </div>
+    </div>
+    <button class="primary" id="startBtn">Iniciar entrevista</button>
+  </div>
+
+  <div class="card" id="chatCard">
+    <div class="chat-head">
+      <span class="block-label" id="blockLabel">Abertura</span>
+      <span class="progress" id="progressLabel">0 / 17</span>
+    </div>
+    <div id="messages"></div>
+    <div class="chat-input">
+      <textarea id="answerInput" placeholder="Digite a resposta e pressione Enter..." rows="1"></textarea>
+      <button class="primary" id="sendBtn">Enviar</button>
+    </div>
+  </div>
+
+  <div class="card" id="outputCard">
+    <h2>Transcrição gerada</h2>
+    <p class="meta" id="outputMeta"></p>
+    <div id="transcriptText"></div>
+    <div class="out-actions">
+      <button class="primary" id="downloadBtn">Baixar transcrição (.md)</button>
+      <button class="secondary" id="copyBtn">Copiar texto</button>
+      <span class="status-msg" id="statusMsg"></span>
+    </div>
+    <div class="next-hint">Copie o texto acima e cole no <strong>Gerador de Relatório de Auditoria de IA</strong> (arquivo <code>gerador-relatorio-ia.html</code>, na mesma pasta) para gerar o relatório de oportunidades.</div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SCRIPT = [
+    { block: 'Bloco 1 — Contexto rápido', q: 'Quantos anos a empresa tem e quantas pessoas trabalham hoje?' },
+    { block: 'Bloco 1 — Contexto rápido', q: 'Qual o principal tipo de transformação ou implemento que vocês mais fazem?' },
+    { block: 'Bloco 1 — Contexto rápido', q: 'Vocês trabalham mais com projetos sob medida ou têm linhas de produtos padrão?' },
+
+    { block: 'Bloco 2 — Onde o tempo e o dinheiro estão sendo perdidos', q: 'Se você olhar para o dia de ontem, o que mais consumiu tempo da equipe ou de você?' },
+    { block: 'Bloco 2 — Onde o tempo e o dinheiro estão sendo perdidos', q: 'Quais tarefas a equipe (ou você) costuma evitar ou deixar para depois? Por quê?' },
+    { block: 'Bloco 2 — Onde o tempo e o dinheiro estão sendo perdidos', q: 'Em qual etapa o trabalho mais se acumula? Onde as coisas param ou atrasam com mais frequência?' },
+    { block: 'Bloco 2 — Onde o tempo e o dinheiro estão sendo perdidos', q: 'Qual processo hoje custa mais caro por ser feito de forma manual?' },
+    { block: 'Bloco 2 — Onde o tempo e o dinheiro estão sendo perdidos', q: 'Vocês já tentaram alguma automação ou sistema que não funcionou bem ou foi abandonado? O que aconteceu?' },
+    { block: 'Bloco 2 — Onde o tempo e o dinheiro estão sendo perdidos', q: 'Se eu pudesse eliminar uma atividade repetitiva da empresa amanhã, qual traria o maior alívio (de tempo ou de custo)?' },
+
+    { block: 'Bloco 3 — Processos críticos', q: 'Como funciona hoje o processo de orçamento? Quanto tempo leva e quantas pessoas envolvem?' },
+    { block: 'Bloco 3 — Processos críticos', q: 'Como é feito o acompanhamento de cada projeto/obra? O cliente consegue ver o status facilmente?' },
+    { block: 'Bloco 3 — Processos críticos', q: 'Como controlam as homologações e documentações (CAT, CSV, DETRAN, SENATRAN)? É manual?' },
+    { block: 'Bloco 3 — Processos críticos', q: 'Como a equipe de produção recebe as informações do que precisa fazer? Existe retrabalho de comunicação?' },
+    { block: 'Bloco 3 — Processos críticos', q: 'Como funciona o pós-venda e a assistência técnica? Existe muita demanda repetitiva de dúvidas?' },
+
+    { block: 'Bloco 4 — Ferramentas atuais', q: 'Quais sistemas ou ferramentas vocês usam hoje (ERP, planilhas, WhatsApp, CAD, etc.)?' },
+    { block: 'Bloco 4 — Ferramentas atuais', q: 'O que mais atrapalha no uso dessas ferramentas no dia a dia?' },
+
+    { block: 'Fechamento', q: 'De tudo que conversamos, qual ponto você sente que mais dói no bolso ou no tempo da equipe?' }
+  ];
+
+  var companyName = '', respName = '', assistantName = 'Ana';
+  var idx = 0;
+  var answers = [];
+  var awaitingStart = true;
+
+  var introEl = document.getElementById('intro');
+  var chatCard = document.getElementById('chatCard');
+  var messagesEl = document.getElementById('messages');
+  var answerInput = document.getElementById('answerInput');
+  var sendBtn = document.getElementById('sendBtn');
+  var blockLabel = document.getElementById('blockLabel');
+  var progressLabel = document.getElementById('progressLabel');
+  var outputCard = document.getElementById('outputCard');
+
+  function addMsg(text, who) {
+    var row = document.createElement('div');
+    row.className = 'msg ' + who;
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function askCurrent() {
+    if (idx >= SCRIPT.length) {
+      finishInterview();
+      return;
+    }
+    var item = SCRIPT[idx];
+    blockLabel.textContent = item.block;
+    progressLabel.textContent = (idx + 1) + ' / ' + SCRIPT.length;
+    addMsg(item.q, 'bot');
+  }
+
+  document.getElementById('startBtn').addEventListener('click', function () {
+    companyName = document.getElementById('companyName').value.trim() || 'a empresa';
+    respName = document.getElementById('respName').value.trim() || 'você';
+    introEl.style.display = 'none';
+    chatCard.style.display = 'block';
+    addMsg('Oi, tudo bem? Eu sou a ' + assistantName + ', assistente virtual da CATERG. Vou fazer uma conversa rápida de 15 a 20 minutos com um objetivo bem claro: entender onde a empresa de vocês mais perde tempo e dinheiro com trabalho manual, para identificar onde a inteligência artificial pode automatizar e reduzir custos. Pode ser agora?', 'bot');
+    setTimeout(function () { askCurrent(); }, 300);
+    answerInput.focus();
+  });
+
+  function submitAnswer() {
+    var text = answerInput.value.trim();
+    if (!text) return;
+    addMsg(text, 'user');
+    answers.push({ block: SCRIPT[idx].block, q: SCRIPT[idx].q, a: text });
+    answerInput.value = '';
+    idx++;
+    setTimeout(askCurrent, 250);
+  }
+
+  sendBtn.addEventListener('click', submitAnswer);
+  answerInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitAnswer();
+    }
+  });
+  answerInput.addEventListener('input', function () {
+    answerInput.style.height = 'auto';
+    answerInput.style.height = Math.min(answerInput.scrollHeight, 140) + 'px';
+  });
+
+  function esc(s) { return String(s == null ? '' : s); }
+
+  function buildTranscript() {
+    var dateStr = new Date().toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    var lines = [];
+    lines.push('# Transcrição — Entrevista de Assessment de IA');
+    lines.push('## Empresa: ' + companyName);
+    lines.push('## Respondente: ' + respName);
+    lines.push('## Data: ' + dateStr);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('**Assistente:** Oi, tudo bem? Eu sou a ' + assistantName + ', assistente virtual da CATERG. Vou fazer uma conversa rápida de 15 a 20 minutos com um objetivo bem claro: entender onde a empresa de vocês mais perde tempo e dinheiro com trabalho manual, para identificar onde a inteligência artificial pode automatizar e reduzir custos. Pode ser agora?');
+    lines.push('');
+    lines.push('**' + respName + ':** Pode sim.');
+    lines.push('');
+
+    var lastBlock = '';
+    answers.forEach(function (item) {
+      if (item.block !== lastBlock) {
+        lines.push('---');
+        lines.push('');
+        lines.push('## ' + item.block);
+        lines.push('');
+        lastBlock = item.block;
+      }
+      lines.push('**Assistente:** ' + item.q);
+      lines.push('');
+      lines.push('**' + respName + ':** ' + item.a);
+      lines.push('');
+    });
+
+    lines.push('---');
+    lines.push('');
+    lines.push('**Assistente:** Perfeito. Vou analisar tudo e em até 48 horas te envio um relatório mostrando exatamente onde a IA pode automatizar e reduzir custo e tempo. Posso enviar por WhatsApp ou e-mail?');
+    lines.push('');
+    lines.push('**' + respName + ':** Combinado.');
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('*Transcrição gerada pela Entrevista Guiada de IA em ' + dateStr + '.*');
+
+    return lines.join('\n');
+  }
+
+  var lastTranscript = '';
+
+  function finishInterview() {
+    chatCard.style.display = 'none';
+    lastTranscript = buildTranscript();
+    document.getElementById('outputMeta').textContent = companyName + ' · ' + answers.length + ' perguntas respondidas';
+    document.getElementById('transcriptText').textContent = lastTranscript;
+    outputCard.style.display = 'block';
+    outputCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setStatus(msg) {
+    document.getElementById('statusMsg').textContent = msg || '';
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    navigator.clipboard.writeText(lastTranscript).then(function () {
+      setStatus('Copiado para a área de transferência.');
+    }).catch(function () {
+      setStatus('Não foi possível copiar automaticamente — selecione o texto manualmente.');
+    });
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', function () {
+    var btn = document.getElementById('downloadBtn');
+    btn.disabled = true;
+    var fname = 'transcricao-' + (companyName || 'empresa').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '.md';
+
+    function done() { btn.disabled = false; }
+
+    claude.use('downloads').then(function (downloads) {
+      if (!downloads) { fallbackDownload(fname, lastTranscript); done(); return; }
+      downloads.save({ filename: fname, data: lastTranscript }).then(function () {
+        setStatus('Transcrição baixada.');
+        done();
+      }).catch(function (err) {
+        if (err && err.code === 'declined') { done(); return; }
+        fallbackDownload(fname, lastTranscript);
+        done();
+      });
+    }).catch(function () { fallbackDownload(fname, lastTranscript); done(); });
+  });
+
+  function fallbackDownload(fname, text) {
+    var blob = new Blob([text], { type: 'text/markdown' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+})();
+</script>
+</body>
+</html>

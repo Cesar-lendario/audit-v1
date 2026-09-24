@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Fluxo de Auditoria de IA</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Comic Sans MS', 'Segoe Print', cursive, sans-serif;
+    background: #ffffff;
+    color: #1e1e1e;
+    padding: 40px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 { text-align:center; letter-spacing: 2px; margin-bottom: 8px; }
+  .section-label {
+    text-align:center;
+    color:#868e96;
+    letter-spacing:2px;
+    font-size:14px;
+    margin: 36px 0 20px;
+    text-transform: uppercase;
+  }
+  hr { border:none; border-top:2px solid #e9ecef; margin: 28px 0; }
+
+  .row-3 {
+    display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:8px;
+  }
+  .pill {
+    border-radius: 12px; padding: 16px 24px; font-weight:600; text-align:center; border:2px solid;
+    flex:1; min-width:220px;
+  }
+  .pill.blue { background:#a5d8ff; border-color:#1c7ed6; color:#0b3d63;}
+  .pill.green { background:#b2f2bb; border-color:#2f9e44; color:#1b4620;}
+  .pill.orange { background:#ffd8a8; border-color:#e8590c; color:#7a3306;}
+
+  .phases {
+    display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:20px;
+  }
+  .card {
+    border-radius: 14px; padding: 18px 20px; border:2px solid; flex:1; min-width:250px; max-width:300px;
+  }
+  .card .phase-tag { font-size:11px; font-weight:700; letter-spacing:1px; opacity:0.8; }
+  .card h3 { margin: 4px 0 10px; font-size:20px; }
+  .card p, .card ul { font-size:14px; line-height:1.5; margin:6px 0; }
+  .card ul { padding-left:18px; }
+
+  .card.blue { background:#d0ebff; border-color:#1c7ed6; color:#0b3d63; }
+  .card.purple { background:#d0bfff; border-color:#7048e8; color:#3b1f7a; }
+  .card.green { background:#b2f2bb; border-color:#2f9e44; color:#1b4620; }
+  .card.orange { background:#ffd8a8; border-color:#e8590c; color:#7a3306; }
+
+  .arrow { align-self:center; font-size:28px; color:#adb5bd; }
+
+  .upsell-grid {
+    display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:20px;
+  }
+  .upsell-card {
+    border-radius:14px; padding:16px 18px; border:2px solid; width:200px;
+  }
+  .upsell-card h4 { margin:0 0 8px; font-size:16px; }
+  .upsell-card .price {
+    display:inline-block; color:white; font-weight:700; padding:4px 10px; border-radius:8px; font-size:14px; margin-bottom:8px;
+  }
+  .upsell-card p { font-size:13px; line-height:1.4; margin:0; }
+
+  .red { background:#ffc9c9; border-color:#e03131; color:#7a1414; }
+  .red .price { background:#e03131; }
+  .amber { background:#ffe8a1; border-color:#e8590c; color:#7a4a06; }
+  .amber .price { background:#7a4a06; }
+  .yellow { background:#fff3bf; border-color:#e8590c; color:#7a4a06; }
+  .yellow .price { background:#7a4a06; }
+  .purple2 { background:#e5dbff; border-color:#7048e8; color:#3b1f7a; }
+  .purple2 .price { background:#7048e8; }
+  .teal { background:#c3fae8; border-color:#0ca678; color:#0b4d3a; }
+  .teal .price { background:#0ca678; }
+
+  .ways-grid {
+    display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:20px;
+  }
+  .way-card {
+    border-radius:14px; padding:16px 18px; border:2px solid; width:190px;
+  }
+  .way-card .num { font-size:12px; opacity:0.7; font-weight:700; }
+  .way-card h4 { margin:4px 0 8px; font-size:16px; }
+  .way-card p { font-size:13px; line-height:1.4; margin:0; }
+
+  .c1 { background:#a5d8ff; border-color:#1c7ed6; color:#0b3d63; }
+  .c2 { background:#ffd8a8; border-color:#e8590c; color:#7a3306; }
+  .c3 { background:#d0bfff; border-color:#7048e8; color:#3b1f7a; }
+  .c4 { background:#b2f2bb; border-color:#2f9e44; color:#1b4620; }
+  .c5 { background:#c3fae8; border-color:#0ca678; color:#0b4d3a; }
+  .c6 { background:#fff3bf; border-color:#e8590c; color:#7a4a06; }
+  .c7 { background:#ffc9c9; border-color:#e03131; color:#7a1414; }
+</style>
+</head>
+<body>
+
+<h1>Fluxo de Trabalho de Ferramentas de IA</h1>
+
+<div class="row-3">
+  <div class="pill blue">Chamada de Descoberta — 45 min</div>
+  <div class="pill green">Relatório Personalizado (3-7 Ferramentas)</div>
+  <div class="pill orange">Chamada de Apresentação — 30 min</div>
+</div>
+
+<div class="section-label">As Quatro Fases</div>
+<div class="phases">
+  <div class="card blue">
+    <div class="phase-tag">FASE 1</div>
+    <h3>Chamada de Descoberta</h3>
+    <p>45 min via Zoom | Gravado pelo Fathom<br>Levante os problemas, não a proposta</p>
+    <p><strong>Perguntas-chave:</strong></p>
+    <ul>
+      <li>Revisar o dia de ontem</li>
+      <li>Tarefas que você evita</li>
+      <li>Onde o trabalho se acumula</li>
+      <li>Automações que falharam</li>
+    </ul>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <div class="card purple">
+    <div class="phase-tag">FASE 2</div>
+    <h3>Análise de IA</h3>
+    <p>Envie a transcrição completa ao Claude<br>Prompt: identificar 5-7 oportunidades</p>
+    <p>O Claude identifica padrões em toda a chamada</p>
+    <p>Revise e adicione opções do seu próprio conjunto de ferramentas</p>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <div class="card green">
+    <div class="phase-tag">FASE 3</div>
+    <h3>O Relatório</h3>
+    <p>Montado no template do Gamma</p>
+    <ul>
+      <li>Resumo executivo (top 3)</li>
+      <li>Matriz de prioridades</li>
+      <li>Recomendação de ferramentas</li>
+      <li>Plano rápido de 4 dias</li>
+      <li>Impacto financeiro</li>
+    </ul>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <div class="card orange">
+    <div class="phase-tag">FASE 4</div>
+    <h3>Chamada de Revisão</h3>
+    <p>Compartilhe a tela com o relatório<br>Percorra cada recomendação</p>
+    <p><strong>3 perguntas de fechamento:</strong></p>
+    <ul>
+      <li>O que é mais urgente para você?</li>
+      <li>Faz sozinho ou quer ajuda?</li>
+      <li>Qual seu prazo?</li>
+    </ul>
+    <p>60% querem implementação</p>
+  </div>
+</div>
+
+<hr>
+
+<div class="section-label">O Menu de Upsell</div>
+<div class="upsell-grid">
+  <div class="upsell-card red">
+    <h4>Redesenho de Processo</h4>
+    <div class="price">R$ 15 – 25 mil</div>
+    <p>Mapear situação atual para futura. Eliminar desperdício.</p>
+  </div>
+  <div class="upsell-card amber">
+    <h4>Construção de Automação</h4>
+    <div class="price">R$ 5 – 15 mil</div>
+    <p>Fluxos no Zapier/Make.com. Construir, treinar, entregar.</p>
+  </div>
+  <div class="upsell-card yellow">
+    <h4>Sistemas de Conhecimento</h4>
+    <div class="price">R$ 15 mil+</div>
+    <p>GPT personalizado treinado com sua biblioteca de conteúdo.</p>
+  </div>
+  <div class="upsell-card purple2">
+    <h4>Fluxos Personalizados</h4>
+    <div class="price">R$ 15 – 25 mil</div>
+    <p>Prompts + templates. Operações com um clique.</p>
+  </div>
+  <div class="upsell-card teal">
+    <h4>Implementação Completa</h4>
+    <div class="price">R$ 25 – 50 mil+</div>
+    <p>Agentes de IA personalizados. Automação total do fluxo de trabalho.</p>
+  </div>
+</div>
+
+<hr>
+
+<div class="section-label">7 Formas de Vender</div>
+<div class="ways-grid">
+  <div class="way-card c1">
+    <div class="num">1</div>
+    <h4>Encontro sobre IA</h4>
+    <p>Organize um evento local. Você é o especialista na sala.</p>
+  </div>
+  <div class="way-card c2">
+    <div class="num">2</div>
+    <h4>Porta a Porta</h4>
+    <p>Visite 10 negócios locais. Ofereça uma auditoria gratuita de 15 min.</p>
+  </div>
+  <div class="way-card c3">
+    <div class="num">3</div>
+    <h4>DMs no LinkedIn</h4>
+    <p>Foque em donos de empresas com 10-50 funcionários. Pergunte sobre a dor, não venda.</p>
+  </div>
+  <div class="way-card c4">
+    <div class="num">4</div>
+    <h4>Auditorias Gratuitas</h4>
+    <p>Comece com sua rede. Constrói portfólio, o boca a boca decola.</p>
+  </div>
+  <div class="way-card c5">
+    <div class="num">5</div>
+    <h4>Parceiros de Agência</h4>
+    <p>Coaches, agências, contadores. Seja a referência de IA deles.</p>
+  </div>
+  <div class="way-card c6">
+    <div class="num">6</div>
+    <h4>Plantão de Atendimento</h4>
+    <p>Ofereça plantão semanal gratuito de IA em um coworking.</p>
+  </div>
+  <div class="way-card c7">
+    <div class="num">7</div>
+    <h4>Divulgue Seus Resultados</h4>
+    <p>Documente cada resultado. 3-5x por semana por 90 dias. Fique em evidência.</p>
+  </div>
+</div>
+
+</body>
+</html>
