@@ -8,8 +8,13 @@ const { buildPptx } = require('./pptx-builder');
 const { buildHtml } = require('./html-builder');
 
 const app = express();
-const REPORTS_DIR = path.join(__dirname, 'reports');
-if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR);
+// Em serverless (Vercel) o disco do projeto é somente leitura — só /tmp aceita escrita.
+// A pasta é criada sob demanda: criar no carregamento do módulo derruba a função inteira.
+const IS_SERVERLESS = !!process.env.VERCEL;
+const REPORTS_DIR = IS_SERVERLESS ? path.join('/tmp', 'reports') : path.join(__dirname, 'reports');
+function ensureReportsDir() {
+  if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
+}
 const PORT = process.env.PORT || 3000;
 const RAW_KEY = process.env.ANTHROPIC_API_KEY || '';
 const ANTHROPIC_API_KEY = /^sk-ant-/.test(RAW_KEY) ? RAW_KEY : '';
@@ -532,6 +537,7 @@ app.post('/api/report', async (req, res) => {
     // Entrega padrão: página HTML salva em disco, servida por URL própria (abre no celular, dá pra compartilhar).
     const html = buildHtml(reportData);
     const id = slugify(reportData.companyName) + '-' + crypto.randomBytes(4).toString('hex');
+    ensureReportsDir();
     fs.writeFileSync(path.join(REPORTS_DIR, id + '.html'), html, 'utf8');
     res.json({ url: '/r/' + id, filename: 'diagnostico-crescimento-' + slugify(reportData.companyName) + '.html' });
   } catch (err) {
@@ -543,17 +549,23 @@ app.post('/api/report', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('Auditoria IA app rodando em http://localhost:' + PORT);
-  const nets = require('os').networkInterfaces();
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-      if (net.family === 'IPv4' && !net.internal) {
-        console.log('Acesse pelo celular (mesma rede Wi-Fi): http://' + net.address + ':' + PORT);
+// Em serverless quem recebe a requisição é a plataforma: o app é exportado como handler
+// e nenhuma porta é aberta.
+if (IS_SERVERLESS) {
+  module.exports = app;
+} else {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log('Auditoria IA app rodando em http://localhost:' + PORT);
+    const nets = require('os').networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal) {
+          console.log('Acesse pelo celular (mesma rede Wi-Fi): http://' + net.address + ':' + PORT);
+        }
       }
     }
-  }
-  if (!ANTHROPIC_API_KEY) {
-    console.warn('Aviso: ANTHROPIC_API_KEY não definida. Configure o arquivo .env antes de usar o chat.');
-  }
-});
+    if (!ANTHROPIC_API_KEY) {
+      console.warn('Aviso: ANTHROPIC_API_KEY não definida. Configure o arquivo .env antes de usar o chat.');
+    }
+  });
+}
