@@ -244,21 +244,21 @@ function slideMapaPerda(ctx, data) {
 function slideConsequencias(ctx, data) {
   const slide = baseSlide(ctx);
   const c = (data.part1 && data.part1.consequenciasNaoAgir) || {};
-  kicker(slide, 'Se nada mudar', COLOR.red);
+  kicker(slide, 'Impacto real', COLOR.red);
   title(slide, 'O custo de não agir');
 
   const cols = [
-    { periodo: '1–3 meses', text: c.curtoPrazo, color: COLOR.amber },
-    { periodo: '6–12 meses', text: c.medioPrazo, color: COLOR.orange },
-    { periodo: '1–3 anos', text: c.longoPrazo, color: COLOR.red }
+    { titulo: 'No Caixa e Vendas', text: c.impactoFinanceiro || c.curtoPrazo, color: COLOR.red },
+    { titulo: 'Na Operação e Tempo', text: c.impactoOperacional || c.medioPrazo, color: COLOR.orange },
+    { titulo: 'No Crescimento e Mercado', text: c.riscoEstrategico || c.longoPrazo, color: COLOR.purple }
   ];
   const y = 2.3, gap = 0.5, cw = (CW - gap * 2) / 3, ch = 4.3;
   cols.forEach(function (col, i) {
     const x = M + i * (cw + gap);
     if (i > 0) vr(slide, x - gap / 2, y, ch);
     accentBar(slide, x, y, 0.8, col.color);
-    slide.addText(col.periodo, {
-      x: x, y: y + 0.2, w: cw, h: 0.5, fontFace: FONT, fontSize: 24, bold: true, color: col.color
+    slide.addText(col.titulo, {
+      x: x, y: y + 0.2, w: cw, h: 0.5, fontFace: FONT, fontSize: 20, bold: true, color: col.color
     });
     const t = truncate(safe(col.text, 'TBD'), 330);
     slide.addText(t, {

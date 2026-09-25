@@ -185,12 +185,12 @@ function buildHtml(data) {
 </section>
 
 <section>
-  <p class="kicker red">Se nada mudar</p>
+  <p class="kicker red">Impacto real</p>
   <h2>O custo de não agir</h2>
   <div class="grid3">
-    <div class="col"><div class="bar" style="background:var(--amber)"></div><h3 class="c-amber">1–3 meses</h3><p>${esc(safe(cons.curtoPrazo))}</p></div>
-    <div class="col"><div class="bar" style="background:var(--orange)"></div><h3 class="c-orange">6–12 meses</h3><p>${esc(safe(cons.medioPrazo))}</p></div>
-    <div class="col"><div class="bar" style="background:var(--red)"></div><h3 class="c-red">1–3 anos</h3><p>${esc(safe(cons.longoPrazo))}</p></div>
+    <div class="col"><div class="bar" style="background:var(--red)"></div><h3 class="c-red">No Caixa e Vendas</h3><p>${esc(safe(cons.impactoFinanceiro || cons.curtoPrazo))}</p></div>
+    <div class="col"><div class="bar" style="background:var(--orange)"></div><h3 class="c-orange">Na Operação e Tempo</h3><p>${esc(safe(cons.impactoOperacional || cons.medioPrazo))}</p></div>
+    <div class="col"><div class="bar" style="background:var(--purple)"></div><h3 class="c-purple">No Crescimento e Mercado</h3><p>${esc(safe(cons.riscoEstrategico || cons.longoPrazo))}</p></div>
   </div>
 </section>
 
