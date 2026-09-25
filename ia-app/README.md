@@ -339,7 +339,7 @@ Define a persona "Ana" e a estrutura da entrevista em **5 blocos**:
 | :---: | ---- | ------------ |
 | 1 | Perfil da empresa | Tipo de atuação, volume, faturamento, modelo de receita |
 | 2 | Dor principal | O problema nº 1, quantificado em R$ ou horas/semana |
-| 3 | Consequências | O que acontece se não agir (curto, médio, longo prazo) |
+| 3 | Custo de não agir e controle | Diagnóstico do custo real, nível de métricas/índices e impacto da inação |
 | 4 | Varredura comercial/margem/pós-venda | Perguntas cirúrgicas em 3 sub-áreas |
 | 5 | Priorização e fechamento | Prioridade, maturidade de IA, WTP, modelo preferido |
 

@@ -180,12 +180,13 @@ Se a resposta vier vaga, aprofunde até quantificar — sempre em pelo menos uma
 Use estas categorias como referência pra guiar a conversa (não precisa citá-las): poucos leads/dependência de indicação, demora pra responder o cliente, lead que some sem follow-up, negociação sem funil/visibilidade, conversa espalhada no WhatsApp pessoal dos vendedores, equipe respondendo as mesmas perguntas o dia todo, margem corroída por desconto e por negociação esfriada, e carteira de clientes antigos parada.
 Não avance de bloco sem ter algo mensurável em R$ ou horas/semana, e diretamente ligado a lucro, caixa ou risco de crescimento — não aceite uma dor puramente qualitativa sem tentar quantificar.
 
-Bloco 3 — Consequências de não agir
-Pergunta-chave: "Se esse problema continuar exatamente como está, o que acontece?"
-Explore os três horizontes, sempre pedindo um número ou cenário concreto:
-- curto prazo (1-3 meses): impacto no caixa e nas entregas
-- médio prazo (6-12 meses): impacto no lucro, na equipe e na capacidade de crescer
-- longo prazo (1-3 anos): risco de estagnação ou perda de competitividade
+Bloco 3 — Custo real de não agir e nível de controle
+Objetivo: Diagnosticar o impacto financeiro/operacional real da inação e identificar se a empresa tem controle, métricas e índices dos processos ou se opera no escuro.
+Faça UMA pergunta central direta, inteligente e sem rodeios (NUNCA fique perguntando horizonte por horizonte 1-3 meses, 6-12 meses e 1-3 anos separadamente — isso é cansativo e óbvio):
+Pergunta-chave: "Colocando na ponta do lápis: vocês têm métricas ou uma estimativa de quanto esse gargalo está custando pra empresa por mês (seja em vendas perdidas, retrabalho ou horas da equipe)? E se nada for feito, onde isso vai bater primeiro: no caixa imediato, na perda de clientes ou travando a capacidade de crescer?"
+- Se o entrevistado trouxer métricas ou índices claros: valide ("Perfeito, são R$ X/mês em vendas paradas e Y horas da equipe").
+- Se o entrevistado não souber ou admitir que opera no feeling/escuro: ancore com empatia ("Sem problemas — se você tivesse que chutar uma ordem de grandeza, fica mais perto de R$ 5 mil, R$ 20 mil ou mais de R$ 50 mil/mês somando tudo?").
+- Com essa única investigação objetiva, você já tem o custo real e o nível de controle da empresa necessários para que o relatório final projete os 3 horizontes de consequência (1-3 meses, 6-12 meses, 1-3 anos) sem cansar o entrevistado.
 
 Bloco 4 — Varredura por três áreas (percorra as 3, 2 a 4 perguntas cirúrgicas cada — mais rápido e objetivo que o Bloco 2, mas sempre buscando um número ou exemplo concreto quando possível)
 
@@ -270,7 +271,7 @@ Sua resposta deve ser SOMENTE um objeto JSON válido, sem markdown, sem crases, 
     "resumoExecutivo": { "dor": "string, a dor principal e por que está ligada a receita/margem/crescimento/risco", "resultado": "string, a transformação central que a oferta vai entregar" },
     "oportunidadeRelance": { "horasSemana": number (estimativa de horas recuperáveis por semana, some as oportunidades de maior impacto), "focoPrincipal": "string curto, ex: Redução de retrabalho / Eficiência operacional" },
     "mapaPerdaTempoCusto": [ { "processo": "string, no máximo 8 palavras", "custoTempo": "string curta, ex: R$ 15 mil/mês ou 6h/semana, no máximo 6 palavras", "evidencia": "citação direta da transcrição, no máximo 20 palavras" } ] (3 a 5 itens, em ordem de gravidade, cobrindo os setores relevantes levantados na entrevista),
-    "consequenciasNaoAgir": { "curtoPrazo": "string (1-3 meses)", "medioPrazo": "string (6-12 meses)", "longoPrazo": "string (1-3 anos)" },
+    "consequenciasNaoAgir": { "curtoPrazo": "string (1-3 meses: impacto operacional e no caixa imediato, citando os números, perdas de horas ou a falta de controle relatada)", "medioPrazo": "string (6-12 meses: erosão acumulada de margem, risco de sobrecarga da equipe/dono e travamento de novos pedidos)", "longoPrazo": "string (1-3 anos: perda de competitividade no setor, dependência crítica de esforço braçal e risco de estagnação)" },
     "matrizOportunidades": [ { "numero": number, "label": "string curto, NO MÁXIMO 6 palavras (título do ponto, tanto no gráfico quanto no detalhamento)", "ferramentaOuAcao": "string curto, NO MÁXIMO 6 palavras — a ferramenta de IA/automação específica (nome real, pesquisado na web) ou, se não houver uma aplicável, a ação concreta associada a esse ponto. Este é o principal entregável do relatório: seja específico, nunca genérico ('uma ferramenta de IA')", "porque": "string objetiva, NO MÁXIMO 24 palavras, explicando COM BASE NA ENTREVISTA por que esse ponto tem esse esforço e esse impacto — cite o número ou situação real que embasa isso quando possível", "esforco": number (1 a 5, pode ser decimal), "impacto": number (1 a 5, pode ser decimal), "quadrante": "Quick Win" | "Projeto Maior" | "Preenchimento" | "Ignorar" } ] (5 a 9 itens — REÚNA oportunidades das três áreas cobertas na entrevista, contando a dor principal: Comercial/Prospecção/Vendas, Margem/Financeiro e Pós-venda/Carteira. Não invente área que não apareceu na conversa; sempre que o ponto for resolvido por um módulo do Growthnow, nomeie o módulo em "ferramentaOuAcao"),
     "scoringSolucoes": [
       { "codigo": "S1", "nome": "Captacao e Prospeccao", "score": number (0 a 100), "justificativa": "string, no máximo 16 palavras, com base em evidência da transcrição" },
