@@ -1,6 +1,8 @@
 // Gera a apresentação como uma página HTML única (landing), com a mesma narrativa do deck:
 // problema → resultado → número → onde vaza → custo de não agir → matriz → resposta → oferta → próximo passo.
-const { computeValor, computePricing, solucaoNome, brl, brlK } = require('./pptx-builder');
+const { computeValor, computePricing, prioritizeMatriz, prioridadeScore, brl, brlK } = require('./pptx-builder');
+
+const WHATSAPP = '5551981180750';
 
 function esc(s) {
   return String(s === undefined || s === null ? '' : s)
@@ -16,14 +18,6 @@ function quadClass(q) {
   if (/preench/i.test(q)) return 'amber';
   return 'red';
 }
-function scoreClass(s) {
-  if (s >= 85) return 'teal';
-  if (s >= 70) return 'green';
-  if (s >= 50) return 'blue';
-  if (s >= 30) return 'amber';
-  return 'red';
-}
-
 const CSS = `
 :root{--navy:#0f3460;--navy-2:#144172;--navy-deep:#0a2547;--footer:#071a33;--amber:#f2a900;--amber-2:#c98700;--amber-hover:#ffbb1f;--amber-soft:#fffaf0;
 --bg:#ffffff;--paper:#f6f7f9;--ink:#16202c;--muted:#4a5566;--faint:#dfe4ec;
@@ -38,13 +32,14 @@ section:last-of-type{border-bottom:0}
 .dark::after{content:'';position:absolute;top:-160px;right:-120px;width:520px;height:520px;background:radial-gradient(circle,rgba(242,169,0,.22),transparent 65%);pointer-events:none}
 .dark section{border-bottom:0;position:relative;z-index:1}
 .dark h1,.dark h2,.dark .big{color:#fff}.dark .muted,.dark .lead{color:#c9d6e8}.dark .kicker{color:var(--amber)}.dark .kicker::before{background:var(--amber)}
-.kicker{font-family:var(--mono);font-weight:500;font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--amber-2);margin:0 0 18px;display:flex;align-items:center;gap:10px}
+.kicker{font-family:var(--mono);font-weight:700;font-size:.95rem;letter-spacing:.13em;text-transform:uppercase;color:var(--amber-2);margin:0 0 18px;display:flex;align-items:center;gap:10px}
 .kicker::before{content:'';width:22px;height:2px;background:var(--amber);flex:none}
 .kicker.orange,.kicker.green,.kicker.blue,.kicker.purple,.kicker.teal,.kicker.red{color:var(--amber-2)}
 h1{font-family:var(--display);font-size:clamp(2.3rem,5.2vw,4rem);line-height:1.05;letter-spacing:-.03em;margin:0 0 20px;font-weight:800;color:var(--navy-deep)}
 h2{font-family:var(--display);font-size:clamp(1.8rem,3.4vw,2.6rem);line-height:1.1;letter-spacing:-.01em;margin:0 0 28px;font-weight:700;color:var(--navy-deep)}
 h3{font-family:var(--display)}
 .big{font-family:var(--display);font-size:clamp(1.4rem,3vw,2.1rem);line-height:1.25;font-weight:700;letter-spacing:-.01em;margin:0;max-width:24em;color:var(--navy-deep)}
+.big.big-wide{max-width:none;width:100%}
 .bar{width:56px;height:4px;margin:0 0 22px;border-radius:2px;background:var(--amber)}
 .bar.green,.bar.orange{background:var(--amber)}
 .muted{color:var(--muted)}
@@ -99,15 +94,42 @@ blockquote{margin:0;padding-left:28px;border-left:4px solid var(--amber);font-fa
 .chain>div{display:flex;flex-direction:column;justify-content:flex-end;background:var(--paper);border-radius:14px;padding:18px}
 .chain .lbl{font-family:var(--mono);font-size:.68rem;letter-spacing:.13em;color:var(--muted);font-weight:500;text-transform:uppercase}.chain .v{font-family:var(--display);font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;margin:6px 0;color:var(--navy-deep)}.chain .n{font-size:.85rem;color:var(--muted)}
 .chain .v.c-teal{color:var(--amber-2)}
+.chain .highlight{background:var(--amber-soft);border:2px solid var(--amber)}
+.badge-top{font-family:var(--mono);font-size:.68rem;letter-spacing:.13em;font-weight:700;text-transform:uppercase;color:#fff;background:var(--amber);padding:6px 14px;border-radius:999px}
 .plan{border:1px solid var(--faint);padding:30px 28px;border-radius:14px;background:#fff;transition:.25s}.plan:hover{transform:translateY(-4px);box-shadow:0 24px 44px -24px rgba(15,52,96,.35)}
 .plan h3{font-size:2.6rem;margin:0;letter-spacing:-.02em}.plan .sub{color:var(--muted);margin:4px 0 18px}.plan .desc{font-size:.96rem;min-height:96px;color:var(--muted)}.plan .price{font-family:var(--display);font-size:1.4rem;font-weight:800;margin-top:16px}.plan .fine{font-size:.8rem;color:var(--muted)}
 .plan.hi{background:var(--navy-deep);border-color:var(--navy-deep);color:#fff}.plan.hi .sub,.plan.hi .desc,.plan.hi .fine{color:#c9d6e8}.plan.hi h3,.plan.hi .price{color:var(--amber)}
 table{width:100%;border-collapse:collapse}td{padding:16px 0;border-top:1px solid var(--faint);vertical-align:top;font-size:.98rem}td:first-child{width:32%;color:var(--amber-2);font-family:var(--mono);font-size:.68rem;letter-spacing:.13em;font-weight:500;text-transform:uppercase;padding-right:20px}
 footer{text-align:center;padding:40px 20px;background:var(--footer);color:#8ea3c2;font-size:.85rem}
 .cta{display:inline-flex;margin-top:24px;padding:14px 22px;background:var(--amber);color:var(--navy-deep);font-weight:600;text-decoration:none;border-radius:999px;font-size:.95rem}
+.cta:hover{background:var(--amber-hover)}
+.cta-block{margin-top:48px;padding:32px clamp(20px,4vw,36px);background:rgba(242,169,0,.07);border:1px solid rgba(242,169,0,.35);border-radius:20px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:18px 0 0}
+.flow .step{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:10px 18px;font-size:.85rem;font-weight:600;color:#fff;white-space:nowrap}
+.flow .arrow{color:var(--amber);font-size:1.1rem;opacity:.7}
+@media(max-width:700px){.flow{gap:8px}.flow .step{font-size:.78rem;padding:8px 14px}.cta-block{padding:24px 18px;border-radius:16px}}
 .dl{position:fixed;top:14px;right:14px;z-index:9;padding:10px 18px;background:var(--navy);border:2px solid transparent;color:#fff;font-family:var(--body);font-size:.85rem;font-weight:600;text-decoration:none;border-radius:999px;transition:.2s}
 .dl:hover{background:var(--navy-deep);transform:translateY(-2px)}
 @media print{.dl{display:none}}
+.legal-footer{background:var(--footer);color:#8ea3c2;padding:0}
+.legal-footer .footer-inner{max-width:1180px;margin:0 auto;padding:22px 24px;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;font-size:.85rem;text-align:center}
+.legal-footer .footer-note{margin:0}
+.legal-footer .footer-btn{font-family:var(--body);font-weight:600;font-size:.82rem;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:8px 16px;cursor:pointer;transition:.2s}
+.legal-footer .footer-btn:hover{border-color:#fff;background:rgba(255,255,255,.12)}
+.legal-dialog{border:none;border-radius:16px;padding:28px 28px 24px;max-width:640px;width:calc(100% - 32px);color:var(--ink);background:#fff;box-shadow:0 24px 44px -24px rgba(15,52,96,.5)}
+.legal-dialog::backdrop{background:rgba(10,37,71,.55)}
+.legal-head{position:relative;padding-right:40px;margin-bottom:8px}
+.legal-head .eyebrow{margin-bottom:8px}
+.legal-head h2{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.02em;color:var(--navy-deep);margin:0}
+.legal-close{position:absolute;top:-6px;right:-6px;width:36px;height:36px;border-radius:50%;border:1px solid var(--faint);background:#fff;font-size:22px;line-height:1;cursor:pointer;color:var(--muted)}
+.legal-close:hover{background:var(--paper);color:var(--ink)}
+.legal-dialog p{margin:12px 0;font-size:.94rem;line-height:1.55}
+.legal-dialog h3{font-family:var(--mono);font-weight:500;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--amber-2);margin:20px 0 10px}
+.legal-dialog ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.legal-dialog li{position:relative;background:var(--paper);border-radius:10px;padding:12px 16px 12px 44px;font-size:.9rem}
+.legal-dialog li::before{content:'';position:absolute;left:18px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--amber)}
+.legal-actions{margin-top:20px;text-align:right}
+.legal-actions button{font-family:var(--body);font-weight:600;font-size:.9rem;color:var(--navy-deep);background:var(--amber);border:none;border-radius:999px;padding:10px 20px;cursor:pointer}
 `;
 
 function buildHtml(data) {
@@ -117,12 +139,9 @@ function buildHtml(data) {
   const o = p1.oportunidadeRelance || {};
   const perdas = (p1.mapaPerdaTempoCusto || []).slice(0, 5);
   const cons = p1.consequenciasNaoAgir || {};
-  const matriz = (p1.matrizOportunidades || []).slice(0, 9);
-  const scores = (p1.scoringSolucoes || []).slice(0, 5).map(s => ({ codigo: s.codigo, nome: solucaoNome(s.codigo, s.nome), score: Math.max(0, Math.min(100, num(s.score))), just: safe(s.justificativa, '') })).sort((a, b) => b.score - a.score);
-  const principal = p1.solucaoPrincipal || {}, secundaria = p1.solucaoSecundaria || {};
-  const sp = scores.find(s => s.codigo === principal.codigo) || {};
-  const ss = scores.find(s => s.codigo === secundaria.codigo) || {};
-  const prom = p2.promessaCentral || {};
+  const matriz = prioritizeMatriz((p1.matrizOportunidades || []).slice(0, 9));
+  const topItem = matriz[0] || {};
+  const topScore = prioridadeScore(topItem);
   const dias = (p2.planoQuickWins5Dias || []).slice(0, 5);
   const depois = (p2.depoisDosQuickWins || []).slice(0, 4);
   const v = computeValor(data);
@@ -166,12 +185,12 @@ function buildHtml(data) {
 
 <section>
   <p class="kicker orange">O problema</p><div class="bar orange"></div>
-  <p class="big">${esc(safe(re.dor, 'Dor principal não identificada.'))}</p>
+  <p class="big big-wide">${esc(safe(re.dor, 'Dor principal não identificada.'))}</p>
 </section>
 
 <section>
   <p class="kicker green">O resultado</p><div class="bar green"></div>
-  <p class="big">${esc(safe(re.resultado, 'Resultado esperado não definido.'))}</p>
+  <p class="big big-wide">${esc(safe(re.resultado, 'Resultado esperado não definido.'))}</p>
 </section>
 
 <section class="grid2">
@@ -241,7 +260,7 @@ function buildHtml(data) {
     <div class="legend-item"><div class="badge bg-red"></div><div class="txt"><strong>Ignorar</strong>Evitar (baixo impacto, alto esforço)</div></div>
   </div>
 
-  <h2 style="font-size:24px">Cada ponto, e a ferramenta que resolve</h2>
+  <h2 style="font-size:24px">Soluções recomendadas</h2>
   <div class="pts">
     ${matriz.map((it, i) => `<div class="pt">
       <div class="b bg-${quadClass(it.quadrante)}">${i + 1}</div>
@@ -258,52 +277,24 @@ function buildHtml(data) {
   <h2>Comece por aqui.</h2>
   <div class="grid2" style="align-items:center">
     <div>
-      <p class="big" style="color:var(--amber-2)">${esc(solucaoNome(principal.codigo, principal.nome))}</p>
-      <p style="font-size:17px;margin:16px 0 0">${esc(sp.just || '')}</p>
+      <p class="big" style="color:var(--amber-2)">${esc(safe(topItem.label, 'Item'))}</p>
+      <p style="font-size:17px;margin:16px 0 0">${esc(safe(topItem.porque, ''))}</p>
     </div>
-    <div style="text-align:right"><div class="hero-num" style="font-size:clamp(80px,14vw,150px)">${Math.round(num(sp.score))}</div><div class="muted" style="font-size:10px;letter-spacing:.22em">/ 100 · SCORE DE PRIORIDADE</div></div>
-  </div>
-  <div style="border-top:1px solid var(--faint);margin-top:36px;padding-top:24px">
-    <div class="muted" style="font-size:10px;letter-spacing:.25em;font-weight:700">DEPOIS</div>
-    <p style="font-size:20px;font-weight:700;margin:8px 0 4px">${esc(solucaoNome(secundaria.codigo, secundaria.nome))} <span class="muted" style="font-weight:800;margin-left:12px">${Math.round(num(ss.score))}</span></p>
-    <p class="muted" style="margin:0;font-size:14px">${esc(ss.just || '')}</p>
+    <div style="text-align:right"><div class="hero-num" style="font-size:clamp(80px,14vw,150px)">${topScore}</div><div class="muted" style="font-size:10px;letter-spacing:.22em">/ 100 · SCORE DE PRIORIDADE</div></div>
   </div>
 </section>
 
-<section>
-  <p class="kicker blue">Priorização</p>
-  <h2>As 5 frentes, ranqueadas</h2>
+${matriz.length > 1 ? `<section>
+  <p class="kicker blue">Seu plano</p>
+  <h2>O que vem depois</h2>
   <div class="score">
-    ${scores.map(s => {
-      const tag = s.codigo === principal.codigo ? 'PRINCIPAL' : (s.codigo === secundaria.codigo ? 'SECUNDÁRIA' : '');
-      const c = scoreClass(s.score);
-      return `<div class="name" style="${tag ? 'font-weight:700' : 'color:var(--muted)'}">${esc(s.nome)}${tag ? `<span class="tag c-${c}">${tag}</span>` : ''}</div><div class="val ${tag ? 'c-' + c : 'muted'}">${Math.round(s.score)}</div><div class="track"><div class="fill bg-${c}" style="width:${s.score}%"></div></div>`;
+    ${matriz.slice(1).map((it, i) => {
+      const score = prioridadeScore(it);
+      const c = quadClass(it.quadrante);
+      return `<div class="name" style="color:var(--muted)">${String(i + 2).padStart(2, '0')} · ${esc(safe(it.label, 'Item'))}</div><div class="val muted">${score}</div><div class="track"><div class="fill bg-${c}" style="width:${score}%"></div></div>`;
     }).join('')}
   </div>
-  <div class="grid4" style="margin-top:32px;border-top:1px solid var(--faint);padding-top:24px">
-    <div class="stat"><div class="lbl">Dor geral</div><div class="v">${Math.round(num(p1.dorGeral))}/100</div></div>
-    <div class="stat"><div class="lbl">Maturidade em IA</div><div class="v">${esc(safe(p1.maturidadeIA))}</div></div>
-    <div class="stat"><div class="lbl">Investimento considerado</div><div class="v">${esc(safe(p1.wtp))}</div></div>
-    <div class="stat"><div class="lbl">Confiança</div><div class="v">${esc(safe(p1.confianca))}</div></div>
-  </div>
-</section>
-
-<section>
-  <p class="kicker purple">A promessa</p>
-  <blockquote>${esc(safe(prom.headline, 'Promessa não definida'))}</blockquote>
-  <p class="c-purple" style="font-weight:700;margin:28px 0 0;letter-spacing:.05em">${esc(safe(prom.nomeOferta, ''))}</p>
-</section>
-
-<section>
-  <p class="kicker purple">Como funciona</p>
-  <h2>${esc(safe(prom.nomeOferta, 'A solução'))}</h2>
-  <p style="font-size:18px;max-width:60ch">${esc(safe(prom.explicacao, ''))}</p>
-</section>
-
-<section>
-  <p class="kicker green">O que muda, em números</p><div class="bar green"></div>
-  <p class="big">${esc(safe(p2.transformacaoMensuravel, 'A definir'))}</p>
-</section>
+</section>` : ''}
 
 <section>
   <p class="kicker green">Plano de ação</p>
@@ -332,13 +323,16 @@ ${depois.length ? `<section>
 </section>
 
 <section>
-  <p class="kicker teal">A oferta</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <p class="kicker teal" style="margin:0">A oferta</p>
+    <span class="badge-top">Proposta recomendada</span>
+  </div>
   <h2>Como chegamos no preço</h2>
   <div class="chain">
     <div><div class="lbl">Valor anual em jogo</div><div class="v">${esc(brlK(p.valor.total))}</div><div class="n">três frentes somadas</div></div>
     <div><div class="lbl">÷ 2</div><div class="v">${esc(brlK(p.conservador))}</div><div class="n">só metade conta: atribuição e incerteza</div></div>
     <div><div class="lbl">× 10%</div><div class="v">${esc(brlK(p.anual))}</div><div class="n">você fica com 90% do ganho</div></div>
-    <div><div class="lbl">÷ 12</div><div class="v c-teal">${esc(brlK(p.alvoCalculado))}</div><div class="n">preço-alvo por mês</div></div>
+    <div class="highlight"><div class="lbl">÷ 12</div><div class="v c-teal">${esc(brlK(p.alvoCalculado))}</div><div class="n">preço-alvo por mês</div></div>
   </div>
   <p style="border-top:1px solid var(--faint);padding-top:20px">${esc(ancor)}</p>
   <div class="grid3" style="margin-top:24px">
@@ -379,9 +373,72 @@ ${depois.length ? `<section>
   <div class="bar"></div>
   <p class="lead" style="font-size:1.12rem;max-width:40ch">${esc(safe(dias[0] && dias[0].tarefa, ''))}</p>
   <p style="font-weight:600;color:var(--amber)">${esc(safe(dias[0] && dias[0].ferramentaOuAcao, ''))}</p>
+
+  <div class="cta-block">
+    <p class="kicker" style="color:var(--amber)">Como isso funciona na prática</p>
+    <div class="flow">
+      ${['Conectar dados', 'Analisar automaticamente', 'Encontrar vazamentos', 'Priorizar pelo impacto', 'Entregar o fix', 'Executar'].map((s, i, arr) => `<span class="step">${esc(s)}</span>${i < arr.length - 1 ? '<span class="arrow">→</span>' : ''}`).join('')}
+    </div>
+    <p class="lead" style="font-size:1.05rem;max-width:52ch;margin:20px 0 0">Esse é o processo. Vamos fazer isso acontecer com você — do diagnóstico até a execução.</p>
+    <a class="cta" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Olá! Vi o diagnóstico de crescimento da ${company} e quero começar.`)}" target="_blank" rel="noopener">Falar com a gente no WhatsApp →</a>
+  </div>
 </section></div>
 
 <footer>${esc(company)} · ${esc(safe(data.date, ''))}</footer>
+
+<footer class="legal-footer">
+  <div class="footer-inner">
+    <span class="footer-note">Seus dados são usados só para gerar este diagnóstico, conforme a LGPD.</span>
+    <button type="button" class="footer-btn" id="privacyBtn">Política de Privacidade</button>
+    <button type="button" class="footer-btn" id="termsBtn">Termos de Uso</button>
+  </div>
+</footer>
+
+<dialog class="legal-dialog" id="privacyDialog" aria-labelledby="privacyTitle">
+  <div class="legal-head">
+    <p class="kicker" style="color:var(--amber-2)">Lei nº 13.709/2018</p>
+    <h2 id="privacyTitle">Política de Privacidade e LGPD</h2>
+    <button type="button" class="legal-close" data-close aria-label="Fechar">×</button>
+  </div>
+  <p>Este diagnóstico segue a Lei Geral de Proteção de Dados. As informações e respostas fornecidas na entrevista são usadas exclusivamente para gerar este diagnóstico e a proposta correspondente — não são vendidas nem compartilhadas com terceiros para outras finalidades.</p>
+  <h3>Como tratamos os dados</h3>
+  <ul>
+    <li><strong>Finalidade:</strong> analisar as respostas da entrevista e montar o diagnóstico, o plano de ação e a oferta.</li>
+    <li><strong>Processamento:</strong> as respostas são processadas por um provedor de tecnologia contratado apenas para essa finalidade, sem uso para outros fins.</li>
+    <li><strong>Seus direitos:</strong> é possível pedir acesso, correção ou exclusão dos dados a qualquer momento, pelo mesmo canal em que este diagnóstico foi recebido.</li>
+    <li><strong>Dados sensíveis:</strong> este relatório não deve conter CPF, CNPJ, senhas ou dados de terceiros — eles não são necessários para o diagnóstico.</li>
+  </ul>
+  <div class="legal-actions"><button type="button" data-close>Entendi</button></div>
+</dialog>
+
+<dialog class="legal-dialog" id="termsDialog" aria-labelledby="termsTitle">
+  <div class="legal-head">
+    <p class="kicker" style="color:var(--amber-2)">Condições do serviço</p>
+    <h2 id="termsTitle">Termos de Uso</h2>
+    <button type="button" class="legal-close" data-close aria-label="Fechar">×</button>
+  </div>
+  <h3>Independência e imparcialidade</h3>
+  <p>As recomendações deste diagnóstico são baseadas exclusivamente nas informações fornecidas na entrevista. Não há comissionamento ou vínculo comercial que influencie a indicação de uma ferramenta, módulo ou fornecedor específico em detrimento de outro.</p>
+  <h3>Natureza das estimativas</h3>
+  <p>Valores de horas recuperadas, receita e custo evitado são estimativas construídas a partir do que foi relatado na entrevista e de referências de mercado — não constituem garantia de resultado. Metas e ativação de valores variáveis dependem do cumprimento das condições descritas na seção de garantia condicional.</p>
+  <h3>Uso do conteúdo</h3>
+  <p>Este relatório é de uso exclusivo da empresa destinatária e não deve ser redistribuído a terceiros sem autorização. As marcas e ferramentas de terceiros citadas pertencem aos respectivos fabricantes.</p>
+  <div class="legal-actions"><button type="button" data-close>Entendi</button></div>
+</dialog>
+
+<script>
+(function(){
+  function wire(btnId, dialogId){
+    var btn = document.getElementById(btnId), dlg = document.getElementById(dialogId);
+    if (!btn || !dlg) return;
+    btn.addEventListener('click', function(){ dlg.showModal(); });
+    dlg.querySelectorAll('[data-close]').forEach(function(el){ el.addEventListener('click', function(){ dlg.close(); }); });
+    dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+  }
+  wire('privacyBtn', 'privacyDialog');
+  wire('termsBtn', 'termsDialog');
+})();
+</script>
 </body></html>`;
 }
 

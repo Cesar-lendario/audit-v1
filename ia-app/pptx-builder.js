@@ -1,5 +1,7 @@
 const PptxGenJS = require('pptxgenjs');
 
+const WHATSAPP = '5551981180750';
+
 // Sistema visual: fundo preto, tipografia grande, um accent por slide, muito respiro.
 // Regra do deck: uma ideia por slide. Se precisa de dois cards, provavelmente são dois slides.
 const COLOR = {
@@ -71,8 +73,8 @@ function baseSlide(ctx) {
 
 function kicker(slide, text, color) {
   slide.addText(text.toUpperCase(), {
-    x: M, y: 0.6, w: CW, h: 0.3,
-    fontFace: FONT, fontSize: 11, color: color || COLOR.muted, bold: true, charSpacing: 3
+    x: M, y: 0.6, w: CW, h: 0.32,
+    fontFace: FONT, fontSize: 14, color: color || COLOR.muted, bold: true, charSpacing: 3
   });
 }
 
@@ -102,6 +104,30 @@ function quadColor(q) {
   if (/preench/i.test(q)) return COLOR.amber;
   return COLOR.red;
 }
+function quadRank(q) {
+  if (/quick/i.test(q)) return 0;
+  if (/projeto/i.test(q)) return 1;
+  if (/preench/i.test(q)) return 2;
+  return 3;
+}
+// Ordena a matriz Esforço x Impacto por prioridade real (quadrante, depois impacto alto/esforço
+// baixo dentro do quadrante). Esta é a única fonte de ordem de prioridade do relatório: o gráfico,
+// a lista de soluções, "Comece por aqui" e "O que vem depois" usam sempre este mesmo ranking,
+// calculado a partir dos números de esforço/impacto — nunca de um score à parte.
+function prioritizeMatriz(items) {
+  return items.slice().sort(function (a, b) {
+    const qa = quadRank(a.quadrante), qb = quadRank(b.quadrante);
+    if (qa !== qb) return qa - qb;
+    const ea = Math.min(5, Math.max(1, num(a.esforco, 3))), eb = Math.min(5, Math.max(1, num(b.esforco, 3)));
+    const ia = Math.min(5, Math.max(1, num(a.impacto, 3))), ib = Math.min(5, Math.max(1, num(b.impacto, 3)));
+    return (ib - eb) - (ia - ea);
+  });
+}
+function prioridadeScore(it) {
+  const e = Math.min(5, Math.max(1, num(it.esforco, 3)));
+  const im = Math.min(5, Math.max(1, num(it.impacto, 3)));
+  return Math.round(((im - e + 4) / 8) * 100);
+}
 // Nomes das 5 frentes em português (códigos S1-S5 vêm do JSON do relatório).
 
 const SOLUCAO_PT = {
@@ -113,14 +139,6 @@ const SOLUCAO_PT = {
 };
 function solucaoNome(codigo, fallback) {
   return SOLUCAO_PT[String(codigo || '').toUpperCase()] || safe(fallback, 'Solução');
-}
-
-function scoreColor(score) {
-  if (score >= 85) return COLOR.teal;
-  if (score >= 70) return COLOR.green;
-  if (score >= 50) return COLOR.blue;
-  if (score >= 30) return COLOR.amber;
-  return COLOR.red;
 }
 
 // ====================================================================
@@ -278,7 +296,7 @@ function slideMatriz(ctx, data) {
     x: M, y: 1.75, w: CW, h: 0.35, fontFace: FONT, fontSize: 13, color: COLOR.muted
   });
 
-  const items = ((data.part1 && data.part1.matrizOportunidades) || []).slice(0, 9);
+  const items = prioritizeMatriz(((data.part1 && data.part1.matrizOportunidades) || []).slice(0, 9));
   const gx = 2.6, gy = 2.3, gw = 8.6, gh = 4.1;
   const halfW = gw / 2, halfH = gh / 2;
 
@@ -334,7 +352,7 @@ function slideMatriz(ctx, data) {
 // 08 · Detalhamento dos pontos (paginado, 6 por slide)
 // ====================================================================
 function slidesMatrizDetalhe(ctx, data) {
-  const items = ((data.part1 && data.part1.matrizOportunidades) || []).slice(0, 9);
+  const items = prioritizeMatriz(((data.part1 && data.part1.matrizOportunidades) || []).slice(0, 9));
   const perPage = 6;
   const pages = [];
   for (let i = 0; i < items.length; i += perPage) pages.push(items.slice(i, i + perPage));
@@ -347,7 +365,7 @@ function slidesMatrizDetalhe(ctx, data) {
 function slideMatrizDetalhePagina(ctx, items, startIndex, pageLabel) {
   const slide = baseSlide(ctx);
   kicker(slide, 'Priorização' + (pageLabel ? ' · ' + pageLabel : ''), COLOR.blue);
-  title(slide, 'Cada ponto, e a ferramenta que resolve');
+  title(slide, 'Soluções recomendadas');
 
   const top = 2.15, bottom = 6.75;
   const gap = 0.6;
@@ -393,47 +411,28 @@ function slideMatrizDetalhePagina(ctx, items, startIndex, pageLabel) {
 // ====================================================================
 function slideResposta(ctx, data) {
   const slide = baseSlide(ctx);
-  const p1 = data.part1 || {};
-  const principal = p1.solucaoPrincipal || {};
-  const secundaria = p1.solucaoSecundaria || {};
-  const scores = p1.scoringSolucoes || [];
-  const find = function (codigo) { return scores.find(function (s) { return s.codigo === codigo; }) || {}; };
-  const sp = find(principal.codigo);
-  const ss = find(secundaria.codigo);
-  const spScore = Math.round(Math.max(0, Math.min(100, num(sp.score, 0))));
+  const matriz = prioritizeMatriz(((data.part1 && data.part1.matrizOportunidades) || []).slice(0, 9));
+  const top = matriz[0] || {};
+  const topScore = prioridadeScore(top);
 
   kicker(slide, 'A resposta', COLOR.teal);
   slide.addText('Comece por aqui.', {
     x: M, y: 1.0, w: CW, h: 0.8, fontFace: FONT, fontSize: 34, bold: true, color: COLOR.ink
   });
 
-  const nome = truncate(solucaoNome(principal.codigo, principal.nome), 60);
+  const nome = truncate(safe(top.label, 'Item'), 60);
   slide.addText(nome, {
     x: M, y: 2.2, w: 8.4, h: 1.5, fontFace: FONT, fontSize: autoSize(nome, 40, 26, 30), bold: true, color: COLOR.teal, valign: 'middle', lineSpacing: 46
   });
-  slide.addText(truncate(safe(sp.justificativa, ''), 160), {
+  slide.addText(truncate(safe(top.porque, ''), 160), {
     x: M, y: 3.8, w: 8.0, h: 1.0, fontFace: FONT, fontSize: 15, color: COLOR.ink, valign: 'top', lineSpacing: 21
   });
 
-  slide.addText(String(spScore), {
+  slide.addText(String(topScore), {
     x: 9.6, y: 1.9, w: 3.0, h: 1.9, fontFace: FONT, fontSize: 110, bold: true, color: COLOR.teal, align: 'right', valign: 'middle'
   });
   slide.addText('/ 100 · SCORE DE PRIORIDADE', {
     x: 9.0, y: 3.8, w: 3.6, h: 0.3, fontFace: FONT, fontSize: 9, bold: true, color: COLOR.muted, align: 'right', charSpacing: 2
-  });
-
-  hr(slide, 5.25);
-  slide.addText('DEPOIS', {
-    x: M, y: 5.45, w: 2, h: 0.3, fontFace: FONT, fontSize: 9, bold: true, color: COLOR.muted, charSpacing: 3
-  });
-  slide.addText(truncate(solucaoNome(secundaria.codigo, secundaria.nome), 60), {
-    x: M, y: 5.75, w: 8.0, h: 0.45, fontFace: FONT, fontSize: 18, bold: true, color: COLOR.ink
-  });
-  slide.addText(truncate(safe(ss.justificativa, ''), 120), {
-    x: M, y: 6.2, w: 8.0, h: 0.5, fontFace: FONT, fontSize: 11.5, color: COLOR.muted, valign: 'top'
-  });
-  slide.addText(String(Math.round(num(ss.score, 0))), {
-    x: 10.6, y: 5.5, w: 2.0, h: 1.0, fontFace: FONT, fontSize: 40, bold: true, color: COLOR.muted, align: 'right', valign: 'middle'
   });
 }
 
@@ -442,100 +441,28 @@ function slideResposta(ctx, data) {
 // ====================================================================
 function slideScoring(ctx, data) {
   const slide = baseSlide(ctx);
-  const p1 = data.part1 || {};
-  kicker(slide, 'Priorização', COLOR.blue);
-  title(slide, 'As 5 frentes, ranqueadas');
+  kicker(slide, 'Seu plano', COLOR.blue);
+  title(slide, 'O que vem depois');
 
-  const principal = p1.solucaoPrincipal || {};
-  const secundaria = p1.solucaoSecundaria || {};
-  const items = (p1.scoringSolucoes || []).slice(0, 5).map(function (it) {
-    return { codigo: safe(it.codigo, ''), nome: solucaoNome(it.codigo, it.nome), score: Math.max(0, Math.min(100, num(it.score, 0))) };
-  }).sort(function (a, b) { return b.score - a.score; });
+  const matriz = prioritizeMatriz(((data.part1 && data.part1.matrizOportunidades) || []).slice(0, 9));
+  const items = matriz.slice(1).map(function (it) {
+    return { numero: 0, nome: safe(it.label, 'Item'), score: prioridadeScore(it), quadrante: it.quadrante };
+  });
 
   const top = 2.05, rowH = 0.47;
   const nameX = M, nameW = 4.3, trackX = M + 4.5, trackW = 5.6, scoreX = M + 10.3, scoreW = 1.2;
 
   items.forEach(function (it, i) {
     const y = top + i * rowH;
-    const col = scoreColor(it.score);
-    const tag = it.codigo === principal.codigo ? 'PRINCIPAL' : (it.codigo === secundaria.codigo ? 'SECUNDÁRIA' : '');
-    const strong = !!tag;
-    slide.addText(truncate(it.nome, 40), {
-      x: nameX, y: y, w: nameW, h: rowH - 0.1, fontFace: FONT, fontSize: 13, bold: strong, color: strong ? COLOR.ink : COLOR.muted, valign: 'middle'
+    const col = quadColor(it.quadrante);
+    slide.addText(String(i + 2).padStart(2, '0') + '  ' + truncate(it.nome, 38), {
+      x: nameX, y: y, w: nameW, h: rowH - 0.1, fontFace: FONT, fontSize: 13, bold: false, color: COLOR.muted, valign: 'middle'
     });
     slide.addShape('rect', { x: trackX, y: y + 0.17, w: trackW, h: 0.1, fill: { color: COLOR.faint }, line: { type: 'none' } });
     slide.addShape('rect', { x: trackX, y: y + 0.17, w: Math.max(0.04, (it.score / 100) * trackW), h: 0.1, fill: { color: col }, line: { type: 'none' } });
     slide.addText(String(Math.round(it.score)), {
-      x: scoreX, y: y, w: scoreW, h: rowH - 0.1, fontFace: FONT, fontSize: 16, bold: true, color: strong ? col : COLOR.muted, align: 'right', valign: 'middle'
+      x: scoreX, y: y, w: scoreW, h: rowH - 0.1, fontFace: FONT, fontSize: 16, bold: false, color: COLOR.muted, align: 'right', valign: 'middle'
     });
-    if (tag) {
-      slide.addText(tag, { x: trackX, y: y - 0.02, w: 2, h: 0.2, fontFace: FONT, fontSize: 7.5, bold: true, color: col, charSpacing: 2 });
-    }
-  });
-
-  const statY = top + items.length * rowH + 0.35;
-  hr(slide, statY);
-  const stats = [
-    { label: 'DOR GERAL', value: Math.round(num(p1.dorGeral, 0)) + '/100' },
-    { label: 'MATURIDADE EM IA', value: truncate(safe(p1.maturidadeIA, 'TBD'), 24) },
-    { label: 'INVESTIMENTO CONSIDERADO', value: truncate(safe(p1.wtp, 'TBD'), 24) },
-    { label: 'CONFIANÇA', value: safe(p1.confianca, 'TBD') }
-  ];
-  const sw = CW / 4;
-  stats.forEach(function (s, i) {
-    const x = M + i * sw;
-    slide.addText(s.label, { x: x, y: statY + 0.15, w: sw - 0.2, h: 0.25, fontFace: FONT, fontSize: 8.5, bold: true, color: COLOR.muted, charSpacing: 2 });
-    slide.addText(s.value, { x: x, y: statY + 0.42, w: sw - 0.2, h: 0.45, fontFace: FONT, fontSize: 15, bold: true, color: COLOR.ink, valign: 'top' });
-  });
-}
-
-// ====================================================================
-// 11 · A promessa (quote em tela cheia)
-// ====================================================================
-function slidePromessa(ctx, data) {
-  const slide = baseSlide(ctx);
-  const p = (data.part2 && data.part2.promessaCentral) || {};
-  const head = truncate(safe(p.headline, 'Promessa não definida'), 260);
-  kicker(slide, 'A promessa', COLOR.purple);
-  slide.addText('“', {
-    x: M - 0.15, y: 1.1, w: 1.5, h: 1.5, fontFace: FONT, fontSize: 120, bold: true, color: COLOR.purple
-  });
-  slide.addText(head, {
-    x: M + 0.9, y: 1.7, w: CW - 1.4, h: 3.9, fontFace: FONT, fontSize: autoSize(head, 34, 22, 110), bold: true, color: COLOR.ink, valign: 'middle', lineSpacing: autoSize(head, 44, 30, 110)
-  });
-  hr(slide, 5.9, M + 0.9, 1.2, COLOR.purple);
-  slide.addText(truncate(safe(p.nomeOferta, 'A definir'), 70), {
-    x: M + 0.9, y: 6.05, w: CW - 1.4, h: 0.45, fontFace: FONT, fontSize: 15, bold: true, color: COLOR.purple, charSpacing: 1
-  });
-}
-
-// ====================================================================
-// 12 · Como funciona
-// ====================================================================
-function slideComoFunciona(ctx, data) {
-  const slide = baseSlide(ctx);
-  const p = (data.part2 && data.part2.promessaCentral) || {};
-  const nome = truncate(safe(p.nomeOferta, 'A solução'), 70);
-  kicker(slide, 'Como funciona', COLOR.purple);
-  slide.addText(nome, {
-    x: M, y: 1.0, w: CW, h: 1.0, fontFace: FONT, fontSize: autoSize(nome, 40, 26, 34), bold: true, color: COLOR.ink, valign: 'top'
-  });
-  const exp = truncate(safe(p.explicacao, ''), 620);
-  slide.addText(exp, {
-    x: M, y: 2.3, w: CW - 1.5, h: 4.2, fontFace: FONT, fontSize: autoSize(exp, 18, 13, 320), color: COLOR.ink, valign: 'top', lineSpacing: autoSize(exp, 27, 19, 320)
-  });
-}
-
-// ====================================================================
-// 13 · O que muda, em números
-// ====================================================================
-function slideTransformacao(ctx, data) {
-  const slide = baseSlide(ctx);
-  const t = truncate(safe(data.part2 && data.part2.transformacaoMensuravel, 'A definir'), 380);
-  kicker(slide, 'O que muda, em números', COLOR.green);
-  accentBar(slide, M, 1.05, 1.0, COLOR.green);
-  slide.addText(t, {
-    x: M, y: 1.4, w: CW - 1.0, h: 4.9, fontFace: FONT, fontSize: autoSize(t, 30, 19, 150), bold: true, color: COLOR.ink, valign: 'middle', lineSpacing: autoSize(t, 40, 27, 150)
   });
 }
 
@@ -705,6 +632,10 @@ function slidePreco(ctx, data) {
   const p = computePricing(data);
   kicker(slide, 'A oferta', COLOR.teal);
   title(slide, 'Como chegamos no preço');
+  slide.addShape('roundRect', { x: M + CW - 2.6, y: 0.55, w: 2.6, h: 0.36, rectRadius: 0.18, fill: { color: COLOR.amber }, line: { type: 'none' } });
+  slide.addText('PROPOSTA RECOMENDADA', {
+    x: M + CW - 2.6, y: 0.55, w: 2.6, h: 0.36, fontFace: FONT, fontSize: 9, bold: true, color: '#ffffff', align: 'center', valign: 'middle', charSpacing: 1
+  });
 
   // Cadeia da conta: valor → conservador → 10% → mensal
   const steps = [
@@ -717,6 +648,9 @@ function slidePreco(ctx, data) {
   steps.forEach(function (s, i) {
     const x = M + i * sw;
     if (i > 0) slide.addText('→', { x: x - 0.45, y: y + 0.35, w: 0.4, h: 0.5, fontFace: FONT, fontSize: 22, color: COLOR.faint, align: 'center', valign: 'middle' });
+    if (i === 3) {
+      slide.addShape('roundRect', { x: x - 0.15, y: y - 0.15, w: sw - 0.25, h: 1.5, rectRadius: 0.08, fill: { color: 'FFFAF0' }, line: { color: COLOR.amber, width: 1.5 } });
+    }
     slide.addText(s.label, { x: x, y: y, w: sw - 0.5, h: 0.28, fontFace: FONT, fontSize: 9, bold: true, color: COLOR.muted, charSpacing: 2 });
     slide.addText(s.value, { x: x, y: y + 0.3, w: sw - 0.5, h: 0.65, fontFace: FONT, fontSize: autoSize(s.value, 28, 20, 12), bold: true, color: i === 3 ? COLOR.teal : COLOR.ink, valign: 'top' });
     slide.addText(s.note, { x: x, y: y + 0.95, w: sw - 0.5, h: 0.45, fontFace: FONT, fontSize: 10, color: COLOR.muted, valign: 'top', lineSpacing: 13 });
@@ -845,8 +779,56 @@ function slideFechamento(ctx, data) {
   slide.addText(truncate(safe(dia1.ferramentaOuAcao, ''), 90), {
     x: M, y: 4.45, w: CW - 2, h: 0.5, fontFace: FONT, fontSize: 15, bold: true, color: COLOR.teal
   });
-  slide.addText(safe(data.companyName, '') + '  ·  ' + safe(data.date, ''), {
-    x: M, y: 6.2, w: CW, h: 0.35, fontFace: FONT, fontSize: 12, color: COLOR.muted
+
+  const boxY = 4.95, boxH = 1.85;
+  slide.addShape('roundRect', { x: M - 0.3, y: boxY, w: CW + 0.6, h: boxH, rectRadius: 0.1, fill: { color: COLOR.amber, transparency: 92 }, line: { color: COLOR.amber, width: 1, transparency: 55 } });
+
+  slide.addText('COMO ISSO FUNCIONA NA PRÁTICA', {
+    x: M, y: boxY + 0.2, w: CW, h: 0.28, fontFace: FONT, fontSize: 10, bold: true, color: COLOR.amber, charSpacing: 2
+  });
+
+  const flowText = 'Conectar dados  →  Analisar automaticamente  →  Encontrar vazamentos  →  Priorizar pelo impacto  →  Entregar o fix  →  Executar';
+  slide.addText(flowText, {
+    x: M, y: boxY + 0.55, w: CW, h: 0.4, fontFace: FONT, fontSize: 11, bold: true, color: COLOR.muted, valign: 'middle'
+  });
+
+  const waUrl = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent('Olá! Vi o diagnóstico de crescimento da ' + safe(data.companyName, '') + ' e quero começar.');
+  slide.addShape('roundRect', { x: M, y: boxY + 1.1, w: 4.6, h: 0.55, rectRadius: 0.28, fill: { color: COLOR.green }, line: { type: 'none' } });
+  slide.addText('Falar com a gente no WhatsApp →', {
+    x: M, y: boxY + 1.1, w: 4.6, h: 0.55, fontFace: FONT, fontSize: 13, bold: true, color: COLOR.bg, align: 'center', valign: 'middle',
+    hyperlink: { url: waUrl }
+  });
+}
+
+// ====================================================================
+// 20 · Privacidade, LGPD e Termos de Uso
+// ====================================================================
+function slideLegal(ctx, data) {
+  const slide = baseSlide(ctx);
+  kicker(slide, 'Informações legais', COLOR.muted);
+  title(slide, 'Privacidade, LGPD e Termos de Uso', { size: 26 });
+
+  const blocks = [
+    {
+      h: 'Privacidade e LGPD (Lei nº 13.709/2018)',
+      t: 'As informações e respostas fornecidas na entrevista são usadas exclusivamente para gerar este diagnóstico e a proposta correspondente — não são vendidas nem compartilhadas com terceiros para outras finalidades. É possível pedir acesso, correção ou exclusão dos dados a qualquer momento.'
+    },
+    {
+      h: 'Independência e imparcialidade',
+      t: 'As recomendações são baseadas exclusivamente nas informações da entrevista. Não há comissionamento ou vínculo comercial que influencie a indicação de uma ferramenta, módulo ou fornecedor específico em detrimento de outro.'
+    },
+    {
+      h: 'Termos de uso',
+      t: 'Valores de horas, receita e custo evitado são estimativas — não constituem garantia de resultado. Este relatório é de uso exclusivo da empresa destinatária e não deve ser redistribuído sem autorização.'
+    }
+  ];
+  const top = 1.9, gap = 0.35, h = (6.6 - top - gap * 2) / 3;
+  blocks.forEach(function (b, i) {
+    const y = top + i * (h + gap);
+    accentBar(slide, M, y, 0.9, COLOR.muted);
+    slide.addText(b.h, { x: M, y: y + 0.15, w: CW, h: 0.3, fontFace: FONT, fontSize: 13, bold: true, color: COLOR.ink });
+    const t = truncate(b.t, 320);
+    slide.addText(t, { x: M, y: y + 0.5, w: CW - 1.0, h: h - 0.55, fontFace: FONT, fontSize: 11, color: COLOR.muted, valign: 'top', lineSpacing: 15 });
   });
 }
 
@@ -855,7 +837,7 @@ async function buildPptx(data) {
   const pptx = newDeck();
   const matrizItems = ((data.part1 && data.part1.matrizOportunidades) || []).slice(0, 9).length;
   const detalhePages = Math.max(1, Math.ceil(matrizItems / 6));
-  const ctx = { pptx: pptx, index: 0, total: 19 + detalhePages, companyName: data.companyName };
+  const ctx = { pptx: pptx, index: 0, total: 20 + detalhePages, companyName: data.companyName };
 
   slideCover(ctx, data);
   slideProblema(ctx, data);
@@ -867,9 +849,6 @@ async function buildPptx(data) {
   slidesMatrizDetalhe(ctx, data);
   slideResposta(ctx, data);
   slideScoring(ctx, data);
-  slidePromessa(ctx, data);
-  slideComoFunciona(ctx, data);
-  slideTransformacao(ctx, data);
   slidePlano5Dias(ctx, data);
   slideDepois(ctx, data);
   slideImpactoFinanceiro(ctx, data);
@@ -877,7 +856,8 @@ async function buildPptx(data) {
   slideNiveis(ctx, data);
   slideGarantia(ctx, data);
   slideFechamento(ctx, data);
+  slideLegal(ctx, data);
   return pptx.write({ outputType: 'nodebuffer' });
 }
 
-module.exports = { buildPptx, computeValor, computePricing, solucaoNome, MATURIDADE, brl, brlK };
+module.exports = { buildPptx, computeValor, computePricing, solucaoNome, prioritizeMatriz, prioridadeScore, MATURIDADE, brl, brlK };

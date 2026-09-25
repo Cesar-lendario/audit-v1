@@ -12,6 +12,12 @@ O público-alvo são fabricantes e transformadoras de veículos (motorhome, ambu
 - **Custo de Não Agir Direto e Sem Rodeios:** Unificação da pergunta do Bloco 3 na entrevista e substituição da evolução temporal (1-3m, 6-12m, 1-3a) no relatório por 3 dimensões diretas de impacto no negócio (*No Caixa e Vendas*, *Na Operação e Tempo*, *No Crescimento e Mercado*).
 - **Copy da Landing Page:** Atualização da comunicação na `index.html` para refletir as funcionalidades do Growthnow (Kanban, Agentes IA 24/7, Automação de follow-up) e o novo foco do diagnóstico.
 - **Cache de Prompts:** Implementação de `cache_control` (ephemeral) nas chamadas à API da Anthropic para reduzir custos de tokens.
+- **Sondas de destravamento na entrevista:** 4 perguntas de apoio (dia de ontem, tarefas evitadas, onde o trabalho se acumula, automações que falharam) usadas só quando o contexto pede — máximo 2 por entrevista, substituindo a pergunta equivalente do bloco.
+- **Prioridade única pela matriz Esforço × Impacto:** "Comece por aqui" e "O que vem depois" agora saem do mesmo ranking da matriz (`prioritizeMatriz`), calculado automaticamente — sem divergir do scoring de frentes.
+- **Relatório mais enxuto:** removidos os blocos de estatísticas (dor geral, maturidade, investimento, confiança), "A promessa", "Como funciona", "O que muda em números" e o bloco "Depois"; títulos renomeados ("Soluções recomendadas", "O que vem depois", kicker "Seu plano").
+- **Oferta e fechamento:** selo "Proposta recomendada" em "Como chegamos no preço"; CTA final com o fluxo *Conectar dados → Analisar → Encontrar vazamentos → Priorizar → Entregar o fix → Executar* e botão de WhatsApp.
+- **Rodapé legal:** Política de Privacidade (LGPD) e Termos de Uso (independência e imparcialidade, natureza das estimativas, uso do conteúdo) em diálogos no HTML e slide final no PPTX.
+- **Layout:** kickers maiores, texto de "O problema"/"O resultado" ocupando a largura da página.
 
 ---
 
@@ -344,6 +350,17 @@ Define a persona "Ana" e a estrutura da entrevista em **5 blocos**:
 | 4 | Varredura comercial/margem/pós-venda | Perguntas cirúrgicas em 3 sub-áreas |
 | 5 | Priorização e fechamento | Prioridade, maturidade de IA, WTP, modelo preferido |
 
+**Sondas de destravamento** (não são um bloco nem uma sequência — cada uma só entra quando o gatilho aparece):
+
+| Sonda | Gatilho | Bloco |
+| ----- | ------- | :---: |
+| Revisar o dia de ontem | Dor principal vaga ou sem estimativa de horas | 2 |
+| Tarefas que você evita | "Tá tudo sob controle" / dor superficial / pós-venda sem rotina de reativação | 2 ou 4.3 |
+| Onde o trabalho se acumula | Tempo de resposta ou funil respondidos "no feeling" | 4.1 / 4.2 |
+| Automações que falharam | Só se já usou/testou IA, automação, CRM ou chatbot | 5 |
+
+Regras: no máximo 2 por entrevista, nunca seguidas; não usar se a resposta já veio concreta; a sonda substitui a pergunta equivalente do bloco; mantém o `[[STAGE:n]]` do bloco atual. No relatório, os relatos das sondas viram `evidencia` em `mapaPerdaTempoCusto`, e uma automação que falhou entra em `garantiaCondicional.prerequisitos`/`limiteEscopo`.
+
 **Marcadores:**
 - `[[STAGE:n]]` — início de cada mensagem da IA, removido antes de exibir ao usuário.
 - `[ENTREVISTA_CONCLUIDA]` — marca o fim da entrevista.
@@ -360,6 +377,8 @@ Gera o relatório como um **JSON estruturado** com 3 partes:
 
 O prompt instrui a IA a recomendar o **Growthnow** quando o gargalo for de captação/atendimento/funil/follow-up.
 
+**Ordem de prioridade:** o relatório não usa mais `solucaoPrincipal`/`scoringSolucoes` para decidir o que fazer primeiro. A matriz é ordenada por `prioritizeMatriz` (quadrante: Quick Win → Projeto Maior → Preenchimento → Ignorar; dentro do quadrante, impacto − esforço). O item 1 vira "Comece por aqui", os demais "O que vem depois", e a numeração do gráfico e da lista "Soluções recomendadas" segue a mesma ordem. O score 0–100 exibido vem de `prioridadeScore`.
+
 ---
 
 ## Geração de relatório
@@ -370,16 +389,19 @@ O prompt instrui a IA a recomendar o **Growthnow** quando o gargalo for de capta
 - Salva em `reports/{slug}-{hash}.html`.
 - Servida via `GET /r/:id`.
 - Design: Navy + Amber, tipografia IBM Plex, gráfico de quadrantes, barras de score.
+- Fecha com CTA de WhatsApp (`WHATSAPP`) e rodapé com diálogos de Política de Privacidade e Termos de Uso.
 
 ### PPTX (`pptx-builder.js`)
 
 - Gera um **deck PowerPoint** usando PptxGenJS.
 - Design: fundo preto, tipografia grande, uma ideia por slide.
-- ~15 slides cobrindo toda a narrativa do relatório.
+- ~18 slides cobrindo toda a narrativa do relatório, terminando no slide de privacidade, LGPD e termos de uso.
 - Exporta funções auxiliares usadas também pelo `html-builder.js`:
   - `computeValor(data)` — calcula métricas financeiras derivadas.
   - `computePricing(data)` — calcula precificação dos 3 níveis.
-  - `solucaoNome(data)` — nome legível da solução principal.
+  - `prioritizeMatriz(items)` — ordena a matriz esforço × impacto por prioridade (fonte única de ordem do relatório).
+  - `prioridadeScore(item)` — score 0–100 a partir de impacto e esforço.
+  - `solucaoNome(codigo, fallback)` — nome legível de uma frente S1–S5.
   - `brl(n)` / `brlK(n)` — formatação monetária (R$).
 
 ---
@@ -510,6 +532,7 @@ Edite os arquivos em `public/`. Como são servidos estáticos, **não precisa re
 | `SCRAPE_MAX_TEXT_CHARS` | server.js | Máximo de texto do scraping (6000) |
 | `ESTIMATED_QUESTIONS` | public/app.js | Estimativa de perguntas para barra de progresso (26) |
 | `COLOR` | pptx-builder.js | Paleta de cores do deck PPTX |
+| `WHATSAPP` | html-builder.js, pptx-builder.js | Número do botão de CTA final (DDI+DDD) |
 
 ---
 
