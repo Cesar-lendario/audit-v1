@@ -19,6 +19,7 @@ O público-alvo são fabricantes e transformadoras de veículos (motorhome, ambu
 - **CTA na landing page:** o mesmo bloco de fechamento do relatório (fluxo de 6 etapas + botão de WhatsApp) no fim da `index.html`, antes do rodapé.
 - **Rodapé legal:** Política de Privacidade (LGPD) e Termos de Uso (independência e imparcialidade, natureza das estimativas, uso do conteúdo) em diálogos no HTML e slide final no PPTX.
 - **Layout:** kickers maiores, texto de "O problema"/"O resultado" ocupando a largura da página.
+- **Formalização da linguagem:** Toda a fala da Ana (roteiro da entrevista) agora usa português formal — "para" em vez de "pra", "Conte-me" em vez de "Me conta", "intuitivamente" em vez de "no feeling", etc. Landing page também padronizada.
 
 ---
 
