@@ -16,6 +16,7 @@ O público-alvo são fabricantes e transformadoras de veículos (motorhome, ambu
 - **Prioridade única pela matriz Esforço × Impacto:** "Comece por aqui" e "O que vem depois" agora saem do mesmo ranking da matriz (`prioritizeMatriz`), calculado automaticamente — sem divergir do scoring de frentes.
 - **Relatório mais enxuto:** removidos os blocos de estatísticas (dor geral, maturidade, investimento, confiança), "A promessa", "Como funciona", "O que muda em números" e o bloco "Depois"; títulos renomeados ("Soluções recomendadas", "O que vem depois", kicker "Seu plano").
 - **Oferta e fechamento:** selo "Proposta recomendada" em "Como chegamos no preço"; CTA final com o fluxo *Conectar dados → Analisar → Encontrar vazamentos → Priorizar → Entregar o fix → Executar* e botão de WhatsApp.
+- **CTA na landing page:** o mesmo bloco de fechamento do relatório (fluxo de 6 etapas + botão de WhatsApp) no fim da `index.html`, antes do rodapé.
 - **Rodapé legal:** Política de Privacidade (LGPD) e Termos de Uso (independência e imparcialidade, natureza das estimativas, uso do conteúdo) em diálogos no HTML e slide final no PPTX.
 - **Layout:** kickers maiores, texto de "O problema"/"O resultado" ocupando a largura da página.
 
@@ -436,6 +437,8 @@ Landing page responsiva com:
 - Formulário de início (nome da empresa, URL do site)
 - Interface de chat com barra de progresso (5 etapas)
 - Painel de geração do relatório (custo/hora, botões HTML e PPTX)
+- Bloco final de CTA (`.cta-final`): fluxo Conectar dados → Executar e botão de WhatsApp
+- Rodapé com diálogo de Privacidade e LGPD
 
 ### `public/app.js`
 
@@ -532,7 +535,7 @@ Edite os arquivos em `public/`. Como são servidos estáticos, **não precisa re
 | `SCRAPE_MAX_TEXT_CHARS` | server.js | Máximo de texto do scraping (6000) |
 | `ESTIMATED_QUESTIONS` | public/app.js | Estimativa de perguntas para barra de progresso (26) |
 | `COLOR` | pptx-builder.js | Paleta de cores do deck PPTX |
-| `WHATSAPP` | html-builder.js, pptx-builder.js | Número do botão de CTA final (DDI+DDD) |
+| `WHATSAPP` | html-builder.js, pptx-builder.js | Número do botão de CTA final (DDI+DDD). Na landing page o número está direto no link `wa.me` da seção `.cta-final` em `public/index.html` — trocar nos três lugares |
 
 ---
 

@@ -96,6 +96,19 @@ h1.title em { font-style: normal; color: var(--amber); }
 .hiw-text { font-size: clamp(15px, 1.4vw, 19px); color: var(--ink); line-height: 1.55; }
 @media (max-width: 560px) { .how-it-works { gap: 12px; } .wrap { padding-top: 20px; } }
 
+.cta-final { margin: 48px 0 0; padding: clamp(28px, 4vw, 44px); background: var(--navy-deep); color: #ffffff; border-radius: var(--r); border: 1px solid rgba(242,169,0,0.35); }
+.cta-final .eyebrow { color: var(--amber); }
+.cta-final-title { font-family: var(--display); font-weight: 800; font-size: clamp(24px, 3vw, 36px); line-height: 1.1; letter-spacing: -0.02em; color: #ffffff; margin: 0 0 8px; text-wrap: balance; }
+.cta-final-title em { font-style: normal; color: var(--amber); }
+.cta-final .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0 0; }
+.cta-final .step { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; padding: 10px 18px; font-size: 0.88rem; font-weight: 600; white-space: nowrap; }
+.cta-final .arrow { color: var(--amber); opacity: 0.75; }
+.cta-final-text { margin: 22px 0 0; color: #c9d6e8; font-size: clamp(15px, 1.4vw, 18px); max-width: 52ch; }
+.cta-btn { display: inline-flex; margin-top: 22px; padding: 14px 24px; background: var(--amber); color: var(--navy-deep); font-weight: 700; text-decoration: none; border-radius: 999px; transition: background .2s; }
+.cta-btn:hover { background: var(--amber-hover); }
+.cta-btn:focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
+@media (max-width: 560px) { .cta-final .flow { gap: 8px; } .cta-final .step { font-size: 0.8rem; padding: 8px 14px; } }
+
 .output-note { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
 .report-link { margin: 0 0 16px; font-family: var(--mono); font-size: 13px; word-break: break-all; }
 .report-link a { color: var(--navy); font-weight: 500; }
