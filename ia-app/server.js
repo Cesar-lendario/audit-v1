@@ -19,7 +19,9 @@ const PORT = process.env.PORT || 3000;
 const RAW_KEY = process.env.ANTHROPIC_API_KEY || '';
 const ANTHROPIC_API_KEY = /^sk-ant-/.test(RAW_KEY) ? RAW_KEY : '';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-sonnet-5';
+const SONNET_MODEL = process.env.SONNET_MODEL || process.env.MODEL || 'claude-sonnet-5';
+const HAIKU_MODEL = process.env.HAIKU_MODEL || 'claude-3-5-haiku-20241022';
+const MODEL = SONNET_MODEL;
 const DONE_MARKER = '[ENTREVISTA_CONCLUIDA]';
 
 // --- Scraping do site do próprio entrevistado (não de terceiros) ---
@@ -233,7 +235,7 @@ REGRAS IMPORTANTES:
 
 const REPORT_SYSTEM_PROMPT = `Você é um consultor especializado em empresas de transformação e implementos veiculares (motorhome, ambulância/emergência, micro-ônibus, reboques, encarroçamento, viaturas, food truck, implementos rodoviários e afins) — especificamente em diagnosticar dores que, resolvidas, geram crescimento e lucro mensurável, e em desenhar, em cima disso, uma oferta de implementação vendável cobrindo três áreas: comercial/prospecção/vendas, margem/financeiro e pós-venda/carteira.
 
-FERRAMENTA DE REFERÊNCIA PARA A IMPLEMENTAÇÃO: o DeskcommCRM (https://github.com/melgarafael/DeskcommCRM) — um CRM open-source auto-hospedado com agentes de IA nativos e WhatsApp, pensado para quem vende por conversa. O que ele resolve, módulo a módulo:
+FERRAMENTA DE REFERÊNCIA PARA A IMPLEMENTAÇÃO: o Growthnow (https://github.com/melgarafael/DeskcommCRM) — um CRM open-source auto-hospedado com agentes de IA nativos e WhatsApp, pensado para quem vende por conversa. O que ele resolve, módulo a módulo:
 - Inbox de WhatsApp em tempo real, com múltiplos números e respostas rápidas (atendimento espalhado no celular de cada vendedor, demora pra responder).
 - Agentes de IA que atendem sozinhos com base de conhecimento (RAG), qualificam, roteiam por intenção e passam pro humano quando precisa (primeiro atendimento fora de horário, perguntas repetidas).
 - Funil kanban com etapas configuráveis e vocabulário por nicho (negociação sem visibilidade, "está na cabeça do vendedor").
@@ -244,7 +246,7 @@ FERRAMENTA DE REFERÊNCIA PARA A IMPLEMENTAÇÃO: o DeskcommCRM (https://github.
 - Controle de acesso por papel, trilha de auditoria e LGPD com exportação/anonimização — os dados e o histórico ficam com a empresa, não no celular do vendedor.
 - Auto-hospedado em VPS via Docker, com instalação por script.
 
-Quando o gargalo identificado for de captação, atendimento, funil, follow-up, métrica comercial ou pós-venda, recomende explicitamente o DeskcommCRM e o módulo específico dele que resolve aquele ponto — usando o nome do módulo, não "um CRM" genérico. Se a dor real da empresa estiver fora do que ele cobre, seja honesto e recomende outra coisa: nunca force a ferramenta onde ela não resolve.
+Quando o gargalo identificado for de captação, atendimento, funil, follow-up, métrica comercial ou pós-venda, recomende explicitamente o Growthnow e o módulo específico dele que resolve aquele ponto — usando o nome do módulo, não "um CRM" genérico. Se a dor real da empresa estiver fora do que ele cobre, seja honesto e recomende outra coisa: nunca force a ferramenta onde ela não resolve.
 
 Princípio central, que deve guiar TODO o relatório:
 > O mercado paga por resultado, não por habilidade.
@@ -269,7 +271,7 @@ Sua resposta deve ser SOMENTE um objeto JSON válido, sem markdown, sem crases, 
     "oportunidadeRelance": { "horasSemana": number (estimativa de horas recuperáveis por semana, some as oportunidades de maior impacto), "focoPrincipal": "string curto, ex: Redução de retrabalho / Eficiência operacional" },
     "mapaPerdaTempoCusto": [ { "processo": "string, no máximo 8 palavras", "custoTempo": "string curta, ex: R$ 15 mil/mês ou 6h/semana, no máximo 6 palavras", "evidencia": "citação direta da transcrição, no máximo 20 palavras" } ] (3 a 5 itens, em ordem de gravidade, cobrindo os setores relevantes levantados na entrevista),
     "consequenciasNaoAgir": { "curtoPrazo": "string (1-3 meses)", "medioPrazo": "string (6-12 meses)", "longoPrazo": "string (1-3 anos)" },
-    "matrizOportunidades": [ { "numero": number, "label": "string curto, NO MÁXIMO 6 palavras (título do ponto, tanto no gráfico quanto no detalhamento)", "ferramentaOuAcao": "string curto, NO MÁXIMO 6 palavras — a ferramenta de IA/automação específica (nome real, pesquisado na web) ou, se não houver uma aplicável, a ação concreta associada a esse ponto. Este é o principal entregável do relatório: seja específico, nunca genérico ('uma ferramenta de IA')", "porque": "string objetiva, NO MÁXIMO 24 palavras, explicando COM BASE NA ENTREVISTA por que esse ponto tem esse esforço e esse impacto — cite o número ou situação real que embasa isso quando possível", "esforco": number (1 a 5, pode ser decimal), "impacto": number (1 a 5, pode ser decimal), "quadrante": "Quick Win" | "Projeto Maior" | "Preenchimento" | "Ignorar" } ] (5 a 9 itens — REÚNA oportunidades das três áreas cobertas na entrevista, contando a dor principal: Comercial/Prospecção/Vendas, Margem/Financeiro e Pós-venda/Carteira. Não invente área que não apareceu na conversa; sempre que o ponto for resolvido por um módulo do DeskcommCRM, nomeie o módulo em "ferramentaOuAcao"),
+    "matrizOportunidades": [ { "numero": number, "label": "string curto, NO MÁXIMO 6 palavras (título do ponto, tanto no gráfico quanto no detalhamento)", "ferramentaOuAcao": "string curto, NO MÁXIMO 6 palavras — a ferramenta de IA/automação específica (nome real, pesquisado na web) ou, se não houver uma aplicável, a ação concreta associada a esse ponto. Este é o principal entregável do relatório: seja específico, nunca genérico ('uma ferramenta de IA')", "porque": "string objetiva, NO MÁXIMO 24 palavras, explicando COM BASE NA ENTREVISTA por que esse ponto tem esse esforço e esse impacto — cite o número ou situação real que embasa isso quando possível", "esforco": number (1 a 5, pode ser decimal), "impacto": number (1 a 5, pode ser decimal), "quadrante": "Quick Win" | "Projeto Maior" | "Preenchimento" | "Ignorar" } ] (5 a 9 itens — REÚNA oportunidades das três áreas cobertas na entrevista, contando a dor principal: Comercial/Prospecção/Vendas, Margem/Financeiro e Pós-venda/Carteira. Não invente área que não apareceu na conversa; sempre que o ponto for resolvido por um módulo do Growthnow, nomeie o módulo em "ferramentaOuAcao"),
     "scoringSolucoes": [
       { "codigo": "S1", "nome": "Captacao e Prospeccao", "score": number (0 a 100), "justificativa": "string, no máximo 16 palavras, com base em evidência da transcrição" },
       { "codigo": "S2", "nome": "Atendimento e Resposta Rapida", "score": number (0 a 100), "justificativa": "string, no máximo 16 palavras" },
@@ -331,16 +333,31 @@ function extractText(content) {
     .join('\n');
 }
 
-async function callAnthropic({ system, messages, tools, maxTokens, timeoutMs }) {
+async function callAnthropic({ system, messages, model, tools, maxTokens, timeoutMs }) {
   if (!ANTHROPIC_API_KEY) {
     const err = new Error('ANTHROPIC_API_KEY não configurada no arquivo .env');
     err.code = 'NO_KEY';
     throw err;
   }
+
+  // Prompt Caching: envia o system prompt com cache_control para reduzir custo de tokens em ~90% nos turnos subsequentes
+  let systemParam = system;
+  if (typeof system === 'string' && system.trim()) {
+    systemParam = [
+      {
+        type: 'text',
+        text: system,
+        cache_control: { type: 'ephemeral' }
+      }
+    ];
+  }
+
+  const selectedModel = model || SONNET_MODEL;
+
   const body = {
-    model: MODEL,
+    model: selectedModel,
     max_tokens: maxTokens || 1024,
-    system,
+    system: systemParam,
     messages
   };
   if (tools && tools.length) body.tools = tools;
@@ -364,7 +381,14 @@ async function callAnthropic({ system, messages, tools, maxTokens, timeoutMs }) 
     throw e;
   }
 
-  if (!res.ok && tools && tools.length) {
+  // Se o modelo mais barato (ex: Haiku) falhar por 400 ou 404, faz fallback automático pro modelo principal (Sonnet)
+  if (!res.ok && selectedModel !== SONNET_MODEL && (res.status === 400 || res.status === 404)) {
+    console.warn(`[Anthropic API] Modelo ${selectedModel} retornou ${res.status}. Tentando fallback para ${SONNET_MODEL}...`);
+    body.model = SONNET_MODEL;
+    res = await fetch(ANTHROPIC_URL, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs || 60000) });
+  }
+
+  if (!res.ok && body.tools && body.tools.length) {
     const errText = await res.text();
     // Retry without tools if the account/model doesn't support web_search.
     if (res.status === 400 || res.status === 404) {
@@ -445,7 +469,13 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Envie ao menos uma mensagem inicial.' });
     }
     const system = withSiteContext(INTERVIEW_SYSTEM_PROMPT, siteContext);
-    const data = await callAnthropic({ system, messages });
+
+    // Bloco 1-3 (primeiras ~12 mensagens): usa Haiku (muito mais barato e rápido para Q&A inicial)
+    // Bloco 4-5 (>12 mensagens): usa Sonnet para raciocínio mais profundo
+    const isEarlyStage = messages.length <= 12;
+    const modelToUse = isEarlyStage ? HAIKU_MODEL : SONNET_MODEL;
+
+    const data = await callAnthropic({ system, messages, model: modelToUse });
     let text = extractText(data.content);
     let done = false;
     if (text.includes(DONE_MARKER)) {
