@@ -792,7 +792,7 @@ function slideFechamento(ctx, data) {
     x: M, y: boxY + 0.55, w: CW, h: 0.4, fontFace: FONT, fontSize: 11, bold: true, color: COLOR.muted, valign: 'middle'
   });
 
-  const waUrl = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent('Olá! Vi o diagnóstico de crescimento da ' + safe(data.companyName, '') + ' e quero começar.');
+  const waUrl = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent('Olá! Quero implementar o diagnóstico de crescimento com vocês!');
   slide.addShape('roundRect', { x: M, y: boxY + 1.1, w: 4.6, h: 0.55, rectRadius: 0.28, fill: { color: COLOR.green }, line: { type: 'none' } });
   slide.addText('Falar com a gente no WhatsApp →', {
     x: M, y: boxY + 1.1, w: 4.6, h: 0.55, fontFace: FONT, fontSize: 13, bold: true, color: COLOR.bg, align: 'center', valign: 'middle',

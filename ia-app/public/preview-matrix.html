@@ -1,24 +1,9 @@
-// Gera a apresentação como uma página HTML única (landing), com a mesma narrativa do deck:
-// problema → resultado → número → onde vaza → custo de não agir → matriz → resposta → oferta → próximo passo.
-const { computeValor, computePricing, prioritizeMatriz, prioridadeScore, brl, brlK } = require('./pptx-builder');
-
-const WHATSAPP = '5551981180750';
-
-function esc(s) {
-  return String(s === undefined || s === null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-function safe(v, fb) { return (v === undefined || v === null || v === '') ? (fb || 'TBD') : v; }
-function num(v, fb) { const n = typeof v === 'number' ? v : parseFloat(v); return isNaN(n) ? (fb || 0) : n; }
-function clamp(v) { return Math.min(5, Math.max(1, num(v, 3))); }
-
-function quadClass(q) {
-  if (/quick/i.test(q)) return 'green';
-  if (/projeto/i.test(q)) return 'blue';
-  if (/preench/i.test(q)) return 'amber';
-  return 'red';
-}
-const CSS = `
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico de Crescimento — REK Reboques &amp; Implementos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
 :root{--navy:#0f3460;--navy-2:#144172;--navy-deep:#0a2547;--footer:#071a33;--amber:#f2a900;--amber-2:#c98700;--amber-hover:#ffbb1f;--amber-soft:#fffaf0;
 --bg:#ffffff;--paper:#f6f7f9;--ink:#16202c;--muted:#4a5566;--faint:#dfe4ec;
 --orange:#c98700;--green:#1f8a4c;--blue:#0f3460;--purple:#144172;--red:#b64a3c;--teal:#c98700;
@@ -130,99 +115,65 @@ footer{text-align:center;padding:40px 20px;background:var(--footer);color:#8ea3c
 .legal-dialog li::before{content:'';position:absolute;left:18px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--amber)}
 .legal-actions{margin-top:20px;text-align:right}
 .legal-actions button{font-family:var(--body);font-weight:600;font-size:.9rem;color:var(--navy-deep);background:var(--amber);border:none;border-radius:999px;padding:10px 20px;cursor:pointer}
-`;
-
-function buildHtml(data) {
-  const p1 = data.part1 || {}, p2 = data.part2 || {}, p3 = data.part3 || {};
-  const company = safe(data.companyName, 'Empresa');
-  const re = p1.resumoExecutivo || {};
-  const o = p1.oportunidadeRelance || {};
-  const perdas = (p1.mapaPerdaTempoCusto || []).slice(0, 5);
-  const cons = p1.consequenciasNaoAgir || {};
-  const matriz = prioritizeMatriz((p1.matrizOportunidades || []).slice(0, 9));
-  const topItem = matriz[0] || {};
-  const topScore = prioridadeScore(topItem);
-  const dias = (p2.planoQuickWins5Dias || []).slice(0, 5);
-  const depois = (p2.depoisDosQuickWins || []).slice(0, 4);
-  const v = computeValor(data);
-  const p = computePricing(data);
-  const niveis = p3.niveis || {};
-  const g = p3.garantiaCondicional || {};
-  const rowColors = ['red', 'orange', 'amber', 'blue', 'purple'];
-
-  let ancor;
-  if (p.ajuste === 'teto') ancor = `Faixa declarada na entrevista: ${brl(p.wtpMin)}–${brl(p.wtpMax)}/mês. A conta passa do teto — proposta ancorada em ${brl(p.alvo)}, com a conta na mesa pra negociar acima.`;
-  else if (p.ajuste === 'piso') ancor = `Faixa declarada na entrevista: ${brl(p.wtpMin)}–${brl(p.wtpMax)}/mês. A conta fica abaixo do piso — proposta ancorada em ${brl(p.alvo)}.`;
-  else if (p.wtpMax > 0) ancor = `Dentro da faixa declarada na entrevista (${brl(p.wtpMin)}–${brl(p.wtpMax)}/mês).`;
-  else ancor = 'O entrevistado não declarou faixa de investimento — o preço-alvo segue a conta.';
-  const ativacao = p.mat.mesAtivacao === 1
-    ? 'Desde o mês 1, sobre o baseline já registrado pelo cliente.'
-    : `A partir do mês ${p.mat.mesAtivacao}, após ${(p.mat.mesAtivacao - 1) * 30} dias de baseline registrado no painel. Antes disso, só a base mensal.`;
-  const precoDe = k => p.temValor ? brl(p[k]) + '/mês' : esc(safe(niveis[k] && niveis[k].preco, 'TBD'));
-
-  const dotsHtml = matriz.map((it, i) => {
-    const e = clamp(it.esforco), im = clamp(it.impacto);
-    const x = 4 + ((e - 1) / 4) * 92, y = 4 + ((5 - im) / 4) * 92;
-    const titleText = `${i + 1}. ${safe(it.label, 'Item')} | ⚙ ${safe(it.ferramentaOuAcao, '')} | Esforço: ${e}/5, Impacto: ${im}/5 (${safe(it.quadrante, '')})`;
-    return `<div class="dot bg-${quadClass(it.quadrante)}" style="left:${x}%;top:${y}%" title="${esc(titleText)}">${i + 1}</div>`;
-  }).join('');
-
-  return `<!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Diagnóstico de Crescimento — ${esc(company)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<style>${CSS}</style></head><body>
-<a class="dl" href="?download" download="diagnostico-${esc(String(company).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''))}.html">⤓ Baixar esta página</a>
+</style></head><body>
+<a class="dl" href="?download" download="diagnostico-rek-reboques-implementos.html">⤓ Baixar esta página</a>
 
 <div class="dark"><section>
   <p class="kicker">Diagnóstico de Crescimento</p>
-  <h1>${esc(company)}</h1>
+  <h1>REK Reboques &amp; Implementos</h1>
   <div class="bar"></div>
   <p class="lead" style="font-size:1.12rem;max-width:62ch">Onde está o dinheiro parado — e como liberar.</p>
-  <p class="muted" style="margin-top:32px;font-size:.85rem">${esc(safe(data.date, ''))}</p>
+  <p class="muted" style="margin-top:32px;font-size:.85rem">25/09/2026</p>
 </section></div>
 
 <section>
   <p class="kicker orange">O problema</p><div class="bar orange"></div>
-  <p class="big big-wide">${esc(safe(re.dor, 'Dor principal não identificada.'))}</p>
+  <p class="big big-wide">Leads de alto valor esfriam por demora de 4 a 6 horas no primeiro atendimento no WhatsApp e falta de follow-up estruturado.</p>
 </section>
 
 <section>
   <p class="kicker green">O resultado</p><div class="bar green"></div>
-  <p class="big big-wide">${esc(safe(re.resultado, 'Resultado esperado não definido.'))}</p>
+  <p class="big big-wide">Implementar agentes de IA 24/7 e funil Kanban integrado para recuperar vendas perdidas e dobrar a taxa de conversão.</p>
 </section>
 
 <section class="grid2">
   <div>
     <p class="kicker green">O tamanho da oportunidade</p>
-    <div class="hero-num">${Math.round(num(o.horasSemana))}</div>
+    <div class="hero-num">18</div>
     <p style="font-size:22px;font-weight:700;margin:12px 0 6px">horas por semana</p>
     <p class="muted" style="margin:0">que hoje somem em retrabalho, espera e apagar incêndio — e podem voltar pro caixa.</p>
   </div>
   <div class="col">
     <div class="lbl muted">Foco principal</div>
-    <p class="big">${esc(safe(o.focoPrincipal, 'A definir'))}</p>
+    <p class="big">Automação de Atendimento e Follow-up Comercial</p>
   </div>
 </section>
 
 <section>
   <p class="kicker orange">Diagnóstico</p>
   <h2>Onde o tempo e o dinheiro vazam</h2>
-  ${perdas.map((it, i) => `<div class="row">
-    <div class="n c-${rowColors[i % 5]}">${String(i + 1).padStart(2, '0')}</div>
-    <div><div class="t">${esc(safe(it.processo, 'Processo'))}</div><div class="ev">${esc(safe(it.evidencia, ''))}</div></div>
-    <div class="v c-${rowColors[i % 5]}">${esc(safe(it.custoTempo, 'TBD'))}</div>
-  </div>`).join('')}
+  <div class="row">
+    <div class="n c-red">01</div>
+    <div><div class="t">Demora no atendimento do WhatsApp</div><div class="ev">Orçamentos de reboques sob medida perdidos para concorrentes mais rápidos</div></div>
+    <div class="v c-red">R$ 45 mil/mês</div>
+  </div><div class="row">
+    <div class="n c-orange">02</div>
+    <div><div class="t">Follow-up manual e esquecido</div><div class="ev">Vendedores não retornam orçamentos após 48h</div></div>
+    <div class="v c-orange">12h/semana</div>
+  </div><div class="row">
+    <div class="n c-amber">03</div>
+    <div><div class="t">Dúvidas técnicas repetitivas</div><div class="ev">Mesmas perguntas de capacidade de carga e freio</div></div>
+    <div class="v c-amber">6h/semana</div>
+  </div>
 </section>
 
 <section>
   <p class="kicker red">Impacto real</p>
   <h2>O custo de não agir</h2>
   <div class="grid3">
-    <div class="col"><div class="bar" style="background:var(--red)"></div><h3 class="c-red">No Caixa e Vendas</h3><p>${esc(safe(cons.impactoFinanceiro || cons.curtoPrazo))}</p></div>
-    <div class="col"><div class="bar" style="background:var(--orange)"></div><h3 class="c-orange">Na Operação e Tempo</h3><p>${esc(safe(cons.impactoOperacional || cons.medioPrazo))}</p></div>
-    <div class="col"><div class="bar" style="background:var(--purple)"></div><h3 class="c-purple">No Crescimento e Mercado</h3><p>${esc(safe(cons.riscoEstrategico || cons.longoPrazo))}</p></div>
+    <div class="col"><div class="bar" style="background:var(--red)"></div><h3 class="c-red">No Caixa e Vendas</h3><p>Perda acumulada estimada em mais de R$ 50 mil/mês em vendas que vão para concorrentes com resposta ágil.</p></div>
+    <div class="col"><div class="bar" style="background:var(--orange)"></div><h3 class="c-orange">Na Operação e Tempo</h3><p>Equipe e proprietário consumindo 18h/semana em tarefas manuais e repetitivas de atendimento.</p></div>
+    <div class="col"><div class="bar" style="background:var(--purple)"></div><h3 class="c-purple">No Crescimento e Mercado</h3><p>Perda de relevância e estagnação da carteira por falta de visibilidade do funil comercial.</p></div>
   </div>
 </section>
 
@@ -244,7 +195,7 @@ function buildHtml(data) {
       <div class="q q2">Projetos maiores</div>
       <div class="q q3">Preenchimentos</div>
       <div class="q q4">Ignorar</div>
-      ${dotsHtml}
+      <div class="dot bg-green" style="left:15.5%;top:8.600000000000005%" title="1. Agente IA de Qualificação 24/7 | ⚙ Growthnow AI WhatsApp | Esforço: 1.5/5, Impacto: 4.8/5 (Quick Win)">1</div><div class="dot bg-green" style="left:22.400000000000002%;top:15.5%" title="2. Funil Kanban de Vendas | ⚙ Growthnow Kanban | Esforço: 1.8/5, Impacto: 4.5/5 (Quick Win)">2</div><div class="dot bg-green" style="left:31.600000000000005%;top:22.399999999999995%" title="3. Régua de Follow-up Automático | ⚙ Growthnow Automações | Esforço: 2.2/5, Impacto: 4.2/5 (Quick Win)">3</div><div class="dot bg-green" style="left:27%;top:31.600000000000005%" title="4. Base de Conhecimento RAG | ⚙ Growthnow Docs RAG | Esforço: 2/5, Impacto: 3.8/5 (Quick Win)">4</div><div class="dot bg-green" style="left:15.5%;top:45.4%" title="5. Reativação de Clientes Antigos | ⚙ Growthnow Tags &amp; Campanha | Esforço: 1.5/5, Impacto: 3.2/5 (Quick Win)">5</div><div class="dot bg-blue" style="left:77.60000000000001%;top:27%" title="6. Integração ERP e Orçamentos | ⚙ API Webhook | Esforço: 4.2/5, Impacto: 4/5 (Projeto Maior)">6</div>
     </div>
     <div class="x-axis">
       <span>← Menos Esforço (1)</span>
@@ -262,13 +213,43 @@ function buildHtml(data) {
 
   <h2 style="font-size:24px">Soluções recomendadas</h2>
   <div class="pts">
-    ${matriz.map((it, i) => `<div class="pt">
-      <div class="b bg-${quadClass(it.quadrante)}">${i + 1}</div>
-      <div><div class="t">${esc(safe(it.label, 'Item'))}</div>
-        <div class="tool">⚙ ${esc(safe(it.ferramentaOuAcao, 'a definir'))}</div>
-        <div class="why">${esc(safe(it.porque, ''))}</div>
-        <div class="tag c-${quadClass(it.quadrante)}">${esc(safe(it.quadrante, ''))} · E${clamp(it.esforco)} · I${clamp(it.impacto)}</div></div>
-    </div>`).join('')}
+    <div class="pt">
+      <div class="b bg-green">1</div>
+      <div><div class="t">Agente IA de Qualificação 24/7</div>
+        <div class="tool">⚙ Growthnow AI WhatsApp</div>
+        <div class="why">Resolve primeiro atendimento fora de horário comercial e qualifica intenção</div>
+        <div class="tag c-green">Quick Win · E1.5 · I4.8</div></div>
+    </div><div class="pt">
+      <div class="b bg-green">2</div>
+      <div><div class="t">Funil Kanban de Vendas</div>
+        <div class="tool">⚙ Growthnow Kanban</div>
+        <div class="why">Dá visibilidade real de orçamentos abertos e histórico centralizado</div>
+        <div class="tag c-green">Quick Win · E1.8 · I4.5</div></div>
+    </div><div class="pt">
+      <div class="b bg-green">3</div>
+      <div><div class="t">Régua de Follow-up Automático</div>
+        <div class="tool">⚙ Growthnow Automações</div>
+        <div class="why">Reengaja clientes após 24h e 72h sem resposta evitando esfriamento</div>
+        <div class="tag c-green">Quick Win · E2.2 · I4.2</div></div>
+    </div><div class="pt">
+      <div class="b bg-green">4</div>
+      <div><div class="t">Base de Conhecimento RAG</div>
+        <div class="tool">⚙ Growthnow Docs RAG</div>
+        <div class="why">Responde automaticamente especificações técnicas e fichas de produtos</div>
+        <div class="tag c-green">Quick Win · E2 · I3.8</div></div>
+    </div><div class="pt">
+      <div class="b bg-green">5</div>
+      <div><div class="t">Reativação de Clientes Antigos</div>
+        <div class="tool">⚙ Growthnow Tags &amp; Campanha</div>
+        <div class="why">Dispara ofertas de manutenção para donos de reboques antigos</div>
+        <div class="tag c-green">Quick Win · E1.5 · I3.2</div></div>
+    </div><div class="pt">
+      <div class="b bg-blue">6</div>
+      <div><div class="t">Integração ERP e Orçamentos</div>
+        <div class="tool">⚙ API Webhook</div>
+        <div class="why">Conecta sistema financeiro com pedidos aprovados</div>
+        <div class="tag c-blue">Projeto Maior · E4.2 · I4</div></div>
+    </div>
   </div>
 </section>
 
@@ -277,49 +258,41 @@ function buildHtml(data) {
   <h2>Comece por aqui.</h2>
   <div class="grid2" style="align-items:center">
     <div>
-      <p class="big" style="color:var(--amber-2)">${esc(safe(topItem.label, 'Item'))}</p>
-      <p style="font-size:17px;margin:16px 0 0">${esc(safe(topItem.porque, ''))}</p>
+      <p class="big" style="color:var(--amber-2)">Agente IA de Qualificação 24/7</p>
+      <p style="font-size:17px;margin:16px 0 0">Resolve primeiro atendimento fora de horário comercial e qualifica intenção</p>
     </div>
-    <div style="text-align:right"><div class="hero-num" style="font-size:clamp(80px,14vw,150px)">${topScore}</div><div class="muted" style="font-size:10px;letter-spacing:.22em">/ 100 · SCORE DE PRIORIDADE</div></div>
+    <div style="text-align:right"><div class="hero-num" style="font-size:clamp(80px,14vw,150px)">91</div><div class="muted" style="font-size:10px;letter-spacing:.22em">/ 100 · SCORE DE PRIORIDADE</div></div>
   </div>
 </section>
 
-${matriz.length > 1 ? `<section>
+<section>
   <p class="kicker blue">Seu plano</p>
   <h2>O que vem depois</h2>
   <div class="score">
-    ${matriz.slice(1).map((it, i) => {
-      const score = prioridadeScore(it);
-      const c = quadClass(it.quadrante);
-      return `<div class="name" style="color:var(--muted)">${String(i + 2).padStart(2, '0')} · ${esc(safe(it.label, 'Item'))}</div><div class="val muted">${score}</div><div class="track"><div class="fill bg-${c}" style="width:${score}%"></div></div>`;
-    }).join('')}
+    <div class="name" style="color:var(--muted)">02 · Funil Kanban de Vendas</div><div class="val muted">84</div><div class="track"><div class="fill bg-green" style="width:84%"></div></div><div class="name" style="color:var(--muted)">03 · Régua de Follow-up Automático</div><div class="val muted">75</div><div class="track"><div class="fill bg-green" style="width:75%"></div></div><div class="name" style="color:var(--muted)">04 · Base de Conhecimento RAG</div><div class="val muted">73</div><div class="track"><div class="fill bg-green" style="width:73%"></div></div><div class="name" style="color:var(--muted)">05 · Reativação de Clientes Antigos</div><div class="val muted">71</div><div class="track"><div class="fill bg-green" style="width:71%"></div></div><div class="name" style="color:var(--muted)">06 · Integração ERP e Orçamentos</div><div class="val muted">48</div><div class="track"><div class="fill bg-blue" style="width:48%"></div></div>
   </div>
-</section>` : ''}
+</section>
 
 <section>
   <p class="kicker green">Plano de ação</p>
   <h2>Cinco dias. Cinco entregas.</h2>
   <div class="timeline">
-    ${dias.map((d, i) => `<div class="day"><div class="d">DIA ${esc(safe(d.dia, i + 1))}</div><div class="task">${esc(safe(d.tarefa, ''))}</div><div class="tl">FERRAMENTA</div><div class="tool">${esc(safe(d.ferramentaOuAcao, 'a definir'))}</div></div>`).join('')}
+    <div class="day"><div class="d">DIA 1</div><div class="task">Configurar agente de IA no WhatsApp para qualificação automática</div><div class="tl">FERRAMENTA</div><div class="tool">Growthnow AI WhatsApp</div></div>
   </div>
 </section>
 
-${depois.length ? `<section>
-  <p class="kicker blue">Plano de ação</p>
-  <h2>E depois da primeira semana</h2>
-  ${depois.map((it, i) => `<div class="row"><div class="n c-blue">${String(i + 1).padStart(2, '0')}</div><div><div class="t">${esc(safe(it.titulo, 'Item'))}</div><div class="ev" style="font-style:normal">${esc(safe(it.descricao, ''))}</div></div><div></div></div>`).join('')}
-</section>` : ''}
+
 
 <section>
   <p class="kicker green">Impacto financeiro</p>
-  <div class="hero-money">${esc(brlK(v.total))}</div>
+  <div class="hero-money">R$ 0</div>
   <p style="font-size:18px;margin:16px 0 32px">por ano em jogo — somando o que se recupera, o que se evita e o que se ganha.</p>
   <div class="grid3" style="border-top:1px solid var(--faint);padding-top:24px">
-    <div class="stat"><div class="lbl" style="color:var(--green)">Recupera</div><div class="v">${esc(brlK(v.horasAnual))}</div><div class="muted" style="font-size:13px;margin-top:6px">${Math.round(v.horasSemana)} h/semana × R$ ${Math.round(v.custoHora)}/h</div></div>
-    <div class="stat"><div class="lbl" style="color:var(--red)">Evita</div><div class="v">${v.risco > 0 ? esc(brlK(v.risco)) : '—'}</div><div class="muted" style="font-size:13px;margin-top:6px">${v.risco > 0 ? 'risco concreto citado na entrevista' : 'nenhuma perda quantificada'}</div>${v.riscoEvidencia ? `<div class="muted" style="font-size:12px;font-style:italic;margin-top:8px">“${esc(v.riscoEvidencia)}”</div>` : ''}</div>
-    <div class="stat"><div class="lbl" style="color:var(--navy)">Ganha</div><div class="v">${v.receita > 0 ? esc(brlK(v.receita)) : '—'}</div><div class="muted" style="font-size:13px;margin-top:6px">${v.receita > 0 ? Math.round(v.atribPct) + '% de ' + esc(brlK(v.receitaBruta)) + ' que hoje não chegam' : 'nenhuma receita perdida quantificada'}</div>${v.receitaEvidencia ? `<div class="muted" style="font-size:12px;font-style:italic;margin-top:8px">“${esc(v.receitaEvidencia)}”</div>` : ''}</div>
+    <div class="stat"><div class="lbl" style="color:var(--green)">Recupera</div><div class="v">R$ 0</div><div class="muted" style="font-size:13px;margin-top:6px">0 h/semana × R$ 0/h</div></div>
+    <div class="stat"><div class="lbl" style="color:var(--red)">Evita</div><div class="v">—</div><div class="muted" style="font-size:13px;margin-top:6px">nenhuma perda quantificada</div><div class="muted" style="font-size:12px;font-style:italic;margin-top:8px">“TBD”</div></div>
+    <div class="stat"><div class="lbl" style="color:var(--navy)">Ganha</div><div class="v">—</div><div class="muted" style="font-size:13px;margin-top:6px">nenhuma receita perdida quantificada</div><div class="muted" style="font-size:12px;font-style:italic;margin-top:8px">“TBD”</div></div>
   </div>
-  <p class="muted" style="font-size:12px;margin-top:24px">Custo estimado das ferramentas: ${esc(brl(v.custoFerramentas))}/mês · Receita atribuída é estimativa conservadora, não promessa.</p>
+  <p class="muted" style="font-size:12px;margin-top:24px">Custo estimado das ferramentas: R$ 0/mês · Receita atribuída é estimativa conservadora, não promessa.</p>
 </section>
 
 <section>
@@ -329,27 +302,27 @@ ${depois.length ? `<section>
   </div>
   <h2>Como chegamos no preço</h2>
   <div class="chain">
-    <div><div class="lbl">Valor anual em jogo</div><div class="v">${esc(brlK(p.valor.total))}</div><div class="n">três frentes somadas</div></div>
-    <div><div class="lbl">÷ 2</div><div class="v">${esc(brlK(p.conservador))}</div><div class="n">só metade conta: atribuição e incerteza</div></div>
-    <div><div class="lbl">× 10%</div><div class="v">${esc(brlK(p.anual))}</div><div class="n">você fica com 90% do ganho</div></div>
-    <div class="highlight"><div class="lbl">÷ 12</div><div class="v c-teal">${esc(brlK(p.alvoCalculado))}</div><div class="n">preço-alvo por mês</div></div>
+    <div><div class="lbl">Valor anual em jogo</div><div class="v">R$ 0</div><div class="n">três frentes somadas</div></div>
+    <div><div class="lbl">÷ 2</div><div class="v">R$ 0</div><div class="n">só metade conta: atribuição e incerteza</div></div>
+    <div><div class="lbl">× 10%</div><div class="v">R$ 0</div><div class="n">você fica com 90% do ganho</div></div>
+    <div class="highlight"><div class="lbl">÷ 12</div><div class="v c-teal">R$ 0</div><div class="n">preço-alvo por mês</div></div>
   </div>
-  <p style="border-top:1px solid var(--faint);padding-top:20px">${esc(ancor)}</p>
+  <p style="border-top:1px solid var(--faint);padding-top:20px">O entrevistado não declarou faixa de investimento — o preço-alvo segue a conta.</p>
   <div class="grid3" style="margin-top:24px">
-    <div class="stat"><div class="lbl" style="color:var(--purple)">Setup · uma vez</div><div class="v">${esc(brl(p.setup))}</div><div class="muted" style="font-size:13px">implementação dos 5 dias</div></div>
-    <div class="stat"><div class="lbl" style="color:var(--teal)">Base · todo mês</div><div class="v">${esc(brl(p.base))}</div><div class="muted" style="font-size:13px">${Math.round(p.mat.basePct * 100)}% do alvo — ferramentas, fluxo e acompanhamento</div></div>
-    <div class="stat"><div class="lbl" style="color:var(--green)">Variável · a partir do mês ${p.mat.mesAtivacao}</div><div class="v">até ${esc(brl(p.variavel))}</div><div class="muted" style="font-size:13px">${Math.round(p.mat.variavelPct * 100)}% do alvo — só com resultado acima da meta</div></div>
+    <div class="stat"><div class="lbl" style="color:var(--purple)">Setup · uma vez</div><div class="v">R$ 0</div><div class="muted" style="font-size:13px">implementação dos 5 dias</div></div>
+    <div class="stat"><div class="lbl" style="color:var(--teal)">Base · todo mês</div><div class="v">R$ 0</div><div class="muted" style="font-size:13px">70% do alvo — ferramentas, fluxo e acompanhamento</div></div>
+    <div class="stat"><div class="lbl" style="color:var(--green)">Variável · a partir do mês 4</div><div class="v">até R$ 0</div><div class="muted" style="font-size:13px">30% do alvo — só com resultado acima da meta</div></div>
   </div>
-  <p class="muted" style="font-size:12px;margin-top:24px"><b>${esc(p.mat.rotulo.toUpperCase())}</b> · ${esc(p.mat.nota)}</p>
+  <p class="muted" style="font-size:12px;margin-top:24px"><b>SEM INDICADORES HOJE</b> · Meses 1–3 constroem o baseline. O variável só conta depois que a régua existe.</p>
 </section>
 
 <section>
   <p class="kicker teal">A oferta</p>
   <h2>Três formas de fazer</h2>
   <div class="grid3">
-    <div class="plan"><h3 class="c-purple">DIY</h3><div class="sub">Você opera, com suporte</div><div class="desc">${esc(safe(niveis.diy && niveis.diy.descricao, ''))}</div><div class="price c-purple">${precoDe('diy')}</div></div>
-    <div class="plan hi"><h3 class="c-blue">DWY</h3><div class="sub">Fazemos junto</div><div class="desc">${esc(safe(niveis.dwy && niveis.dwy.descricao, ''))}</div><div class="price c-blue">${precoDe('dwy')}</div>${p.temValor ? `<div class="fine">setup ${esc(brl(p.setup))} · variável a partir do mês ${p.mat.mesAtivacao}</div>` : ''}</div>
-    <div class="plan"><h3 class="c-teal">DFY</h3><div class="sub">Nós assumimos tudo</div><div class="desc">${esc(safe(niveis.dfy && niveis.dfy.descricao, ''))}</div><div class="price c-teal">${precoDe('dfy')}</div></div>
+    <div class="plan"><h3 class="c-purple">DIY</h3><div class="sub">Você opera, com suporte</div><div class="desc">TBD</div><div class="price c-purple">R$ 2.500</div></div>
+    <div class="plan hi"><h3 class="c-blue">DWY</h3><div class="sub">Fazemos junto</div><div class="desc">TBD</div><div class="price c-blue">R$ 5.800</div></div>
+    <div class="plan"><h3 class="c-teal">DFY</h3><div class="sub">Nós assumimos tudo</div><div class="desc">TBD</div><div class="price c-teal">R$ 9.800</div></div>
   </div>
 </section>
 
@@ -357,13 +330,13 @@ ${depois.length ? `<section>
   <p class="kicker teal">A oferta</p>
   <h2>Garantia condicional</h2>
   <table>
-    <tr><td>Resultado esperado</td><td>${esc(safe(g.resultadoEsperado))}</td></tr>
-    <tr><td>Prazo de avaliação</td><td>${esc(safe(g.prazo))}</td></tr>
-    <tr><td>Pré-requisitos do cliente</td><td>${esc(safe(g.prerequisitos))}</td></tr>
-    <tr><td>Métrica objetiva</td><td>${esc(safe(g.metricaObjetiva))}</td></tr>
-    <tr><td>Ativação do variável</td><td>${esc(ativacao)}</td></tr>
-    <tr><td>Elegibilidade</td><td>${esc(safe(g.elegibilidade))}</td></tr>
-    <tr><td>Fora do escopo</td><td>${esc(safe(g.limiteEscopo))}</td></tr>
+    <tr><td>Resultado esperado</td><td>TBD</td></tr>
+    <tr><td>Prazo de avaliação</td><td>TBD</td></tr>
+    <tr><td>Pré-requisitos do cliente</td><td>TBD</td></tr>
+    <tr><td>Métrica objetiva</td><td>TBD</td></tr>
+    <tr><td>Ativação do variável</td><td>A partir do mês 4, após 90 dias de baseline registrado no painel. Antes disso, só a base mensal.</td></tr>
+    <tr><td>Elegibilidade</td><td>TBD</td></tr>
+    <tr><td>Fora do escopo</td><td>TBD</td></tr>
   </table>
 </section>
 
@@ -371,20 +344,20 @@ ${depois.length ? `<section>
   <p class="kicker">Próximo passo</p>
   <h1 style="font-size:clamp(2rem,4.4vw,3.2rem)">Vamos começar pelo <em style="font-style:normal;color:var(--amber)">Dia 1</em>.</h1>
   <div class="bar"></div>
-  <p class="lead" style="font-size:1.12rem;max-width:40ch">${esc(safe(dias[0] && dias[0].tarefa, ''))}</p>
-  <p style="font-weight:600;color:var(--amber)">${esc(safe(dias[0] && dias[0].ferramentaOuAcao, ''))}</p>
+  <p class="lead" style="font-size:1.12rem;max-width:40ch">Configurar agente de IA no WhatsApp para qualificação automática</p>
+  <p style="font-weight:600;color:var(--amber)">Growthnow AI WhatsApp</p>
 
   <div class="cta-block">
     <p class="kicker" style="color:var(--amber)">Como isso funciona na prática</p>
     <div class="flow">
-      ${['Conectar dados', 'Analisar automaticamente', 'Encontrar vazamentos', 'Priorizar pelo impacto', 'Entregar o fix', 'Executar'].map((s, i, arr) => `<span class="step">${esc(s)}</span>${i < arr.length - 1 ? '<span class="arrow">→</span>' : ''}`).join('')}
+      <span class="step">Conectar dados</span><span class="arrow">→</span><span class="step">Analisar automaticamente</span><span class="arrow">→</span><span class="step">Encontrar vazamentos</span><span class="arrow">→</span><span class="step">Priorizar pelo impacto</span><span class="arrow">→</span><span class="step">Entregar o fix</span><span class="arrow">→</span><span class="step">Executar</span>
     </div>
     <p class="lead" style="font-size:1.05rem;max-width:52ch;margin:20px 0 0">Esse é o processo. Vamos fazer isso acontecer com você — do diagnóstico até a execução.</p>
-    <a class="cta" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent('Olá! Quero implementar o diagnóstico de crescimento com vocês!')}" target="_blank" rel="noopener">Falar com a gente no WhatsApp →</a>
+    <a class="cta" href="https://wa.me/5551981180750?text=Ol%C3%A1!%20Vi%20o%20diagn%C3%B3stico%20de%20crescimento%20da%20REK%20Reboques%20%26%20Implementos%20e%20quero%20come%C3%A7ar." target="_blank" rel="noopener">Falar com a gente no WhatsApp →</a>
   </div>
 </section></div>
 
-<footer>${esc(company)} · ${esc(safe(data.date, ''))}</footer>
+<footer>REK Reboques &amp; Implementos · 25/09/2026</footer>
 
 <footer class="legal-footer">
   <div class="footer-inner">
@@ -439,7 +412,4 @@ ${depois.length ? `<section>
   wire('termsBtn', 'termsDialog');
 })();
 </script>
-</body></html>`;
-}
-
-module.exports = { buildHtml };
+</body></html>
