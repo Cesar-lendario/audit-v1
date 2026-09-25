@@ -63,11 +63,23 @@ h3{font-family:var(--display)}
 .c-red{color:var(--red)}.c-orange{color:var(--amber-2)}.c-amber{color:var(--amber-2)}.c-blue{color:var(--navy)}.c-purple{color:var(--navy-2)}.c-green{color:var(--green)}.c-teal{color:var(--amber-2)}
 .bg-red{background:var(--red);color:#fff}.bg-orange{background:var(--amber-2);color:#fff}.bg-amber{background:var(--amber);color:var(--navy-deep)}.bg-blue{background:var(--navy);color:#fff}.bg-purple{background:var(--navy-2);color:#fff}.bg-green{background:var(--green);color:#fff}.bg-teal{background:var(--amber-2);color:#fff}
 .col h3{margin:0 0 10px;font-size:1.5rem;color:var(--navy-deep)}.col .lbl{font-family:var(--mono);font-size:.72rem;letter-spacing:.13em;font-weight:500;text-transform:uppercase;margin-bottom:8px;color:var(--amber-2)}
-.matrix{position:relative;aspect-ratio:2/1.1;border:1px solid var(--faint);border-radius:14px;margin:24px 0 8px;overflow:hidden}
-.matrix .q{position:absolute;width:50%;height:50%;padding:12px;font-family:var(--mono);font-size:.68rem;letter-spacing:.13em;font-weight:500;text-transform:uppercase}
-.q1{left:0;top:0;background:#e6f4ec;color:var(--green)}.q2{right:0;top:0;background:#e8eef7;color:var(--navy)}.q3{left:0;bottom:0;background:#fff4d6;color:var(--amber-2)}.q4{right:0;bottom:0;background:#fbe7e2;color:var(--red)}
-.dot{position:absolute;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;font-family:var(--display);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 4px 10px -4px rgba(15,52,96,.5)}
-.axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.68rem;letter-spacing:.13em;color:var(--muted);text-transform:uppercase;margin-bottom:32px}
+.matrix-wrapper{display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;gap:8px 14px;margin:28px 0 16px;align-items:center}
+.y-axis{display:flex;flex-direction:column;justify-content:space-between;height:100%;font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;text-align:right;padding:8px 0;width:95px}
+.y-axis .y-mid{transform:rotate(-90deg);white-space:nowrap;font-weight:700;color:var(--navy-deep);align-self:center}
+.matrix{position:relative;aspect-ratio:2/1.1;border:1px solid var(--faint);border-radius:14px;overflow:hidden;box-shadow:0 8px 24px -12px rgba(15,52,96,.1)}
+.matrix .divider-v{position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(15,52,96,.15);border-left:1px dashed rgba(15,52,96,.25);z-index:2}
+.matrix .divider-h{position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(15,52,96,.15);border-top:1px dashed rgba(15,52,96,.25);z-index:2}
+.matrix .q{position:absolute;width:50%;height:50%;padding:14px;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;font-weight:700;text-transform:uppercase}
+.q1{left:0;top:0;background:rgba(30,138,76,.08);color:var(--green)}.q2{right:0;top:0;background:rgba(21,93,177,.08);color:var(--navy)}.q3{left:0;bottom:0;background:rgba(230,140,20,.08);color:var(--amber-2)}.q4{right:0;bottom:0;background:rgba(214,48,49,.08);color:var(--red)}
+.dot{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;font-family:var(--display);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 4px 12px -2px rgba(15,52,96,.4);cursor:pointer;transition:transform .15s;z-index:3}
+.dot:hover{transform:scale(1.2);z-index:10}
+.x-axis{grid-column:2;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;padding:4px 8px}
+.x-axis .x-mid{font-weight:700;color:var(--navy-deep)}
+.matrix-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0 36px}
+@media(max-width:768px){.matrix-legend{grid-template-columns:1fr 1fr}.matrix-wrapper{grid-template-columns:1fr}.y-axis{display:none}.x-axis{grid-column:1}}
+.legend-item{border:1px solid var(--faint);border-radius:8px;padding:10px 12px;background:#fff;display:flex;align-items:center;gap:10px}
+.legend-item .badge{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.legend-item .txt{font-size:.78rem;line-height:1.2}.legend-item .txt strong{display:block;font-size:.82rem;color:var(--navy-deep)}
 .pts{display:grid;grid-template-columns:1fr 1fr;gap:20px 40px}@media(max-width:820px){.pts{grid-template-columns:1fr}}
 .pt{border:1px solid var(--faint);border-radius:12px;padding:18px 20px;display:grid;grid-template-columns:36px 1fr;gap:12px;transition:.2s}
 .pt:hover{border-color:var(--amber);background:var(--amber-soft)}
@@ -132,7 +144,8 @@ function buildHtml(data) {
   const dotsHtml = matriz.map((it, i) => {
     const e = clamp(it.esforco), im = clamp(it.impacto);
     const x = 4 + ((e - 1) / 4) * 92, y = 4 + ((5 - im) / 4) * 92;
-    return `<div class="dot bg-${quadClass(it.quadrante)}" style="left:${x}%;top:${y}%">${i + 1}</div>`;
+    const titleText = `${i + 1}. ${safe(it.label, 'Item')} | ⚙ ${safe(it.ferramentaOuAcao, '')} | Esforço: ${e}/5, Impacto: ${im}/5 (${safe(it.quadrante, '')})`;
+    return `<div class="dot bg-${quadClass(it.quadrante)}" style="left:${x}%;top:${y}%" title="${esc(titleText)}">${i + 1}</div>`;
   }).join('');
 
   return `<!DOCTYPE html>
@@ -198,11 +211,36 @@ function buildHtml(data) {
   <p class="kicker blue">Priorização</p>
   <h2>Esforço × Impacto</h2>
   <p class="muted" style="margin:0">Quanto mais alto e mais à esquerda, antes deve ser feito.</p>
-  <div class="matrix">
-    <div class="q q1">Quick wins</div><div class="q q2">Projetos maiores</div><div class="q q3">Preenchimentos</div><div class="q q4">Ignorar</div>
-    ${dotsHtml}
+
+  <div class="matrix-wrapper">
+    <div class="y-axis">
+      <span>↑ Mais Impacto (5)</span>
+      <span class="y-mid">Eixo Y: Impacto</span>
+      <span>Menos Impacto (1) ↓</span>
+    </div>
+    <div class="matrix">
+      <div class="divider-v"></div>
+      <div class="divider-h"></div>
+      <div class="q q1">Quick wins</div>
+      <div class="q q2">Projetos maiores</div>
+      <div class="q q3">Preenchimentos</div>
+      <div class="q q4">Ignorar</div>
+      ${dotsHtml}
+    </div>
+    <div class="x-axis">
+      <span>← Menos Esforço (1)</span>
+      <span class="x-mid">Eixo X: Esforço de Implementação</span>
+      <span>Mais Esforço (5) →</span>
+    </div>
   </div>
-  <div class="axis"><span>← Menos esforço</span><span>Mais esforço →</span></div>
+
+  <div class="matrix-legend">
+    <div class="legend-item"><div class="badge bg-green"></div><div class="txt"><strong>Quick Wins</strong>Fazer primeiro (alto impacto, baixo esforço)</div></div>
+    <div class="legend-item"><div class="badge bg-blue"></div><div class="txt"><strong>Projetos Maiores</strong>Planejar e estruturar (alto impacto, alto esforço)</div></div>
+    <div class="legend-item"><div class="badge bg-orange"></div><div class="txt"><strong>Preenchimentos</strong>Fazer se sobrar tempo (baixo impacto, baixo esforço)</div></div>
+    <div class="legend-item"><div class="badge bg-red"></div><div class="txt"><strong>Ignorar</strong>Evitar (baixo impacto, alto esforço)</div></div>
+  </div>
+
   <h2 style="font-size:24px">Cada ponto, e a ferramenta que resolve</h2>
   <div class="pts">
     ${matriz.map((it, i) => `<div class="pt">

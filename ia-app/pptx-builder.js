@@ -297,13 +297,15 @@ function slideMatriz(ctx, data) {
   lab('PREENCHIMENTOS', gx + 0.2, gy + halfH + 0.12, halfW - 0.4, COLOR.amber);
   lab('IGNORAR', gx + halfW + 0.2, gy + halfH + 0.12, halfW - 0.4, COLOR.red);
 
-  slide.addText('MENOS ESFORÇO', { x: gx, y: gy + gh + 0.08, w: gw / 2, h: 0.3, fontFace: FONT, fontSize: 9, color: COLOR.muted, charSpacing: 2 });
-  slide.addText('MAIS ESFORÇO', { x: gx + gw / 2, y: gy + gh + 0.08, w: gw / 2, h: 0.3, fontFace: FONT, fontSize: 9, color: COLOR.muted, charSpacing: 2, align: 'right' });
-  // Caixa larga e baixa, girada 270° em torno do próprio centro — fica encostada à esquerda da grade.
-  const vw = 2.4, vh = 0.3;
-  slide.addText('MAIS IMPACTO  ↑', {
-    x: gx - 0.45 - vw / 2 - vh / 2, y: gy + gh / 4 - vh / 2, w: vw, h: vh,
-    fontFace: FONT, fontSize: 9, color: COLOR.muted, charSpacing: 2, align: 'center', valign: 'middle', rotate: 270
+  slide.addText('← MENOS ESFORÇO (1)', { x: gx, y: gy + gh + 0.08, w: gw / 2, h: 0.3, fontFace: FONT, fontSize: 9, color: COLOR.muted, charSpacing: 1 });
+  slide.addText('MAIS ESFORÇO (5) →', { x: gx + gw / 2, y: gy + gh + 0.08, w: gw / 2, h: 0.3, fontFace: FONT, fontSize: 9, color: COLOR.muted, charSpacing: 1, align: 'right' });
+  slide.addText('EIXO X: ESFORÇO DE IMPLEMENTAÇÃO', { x: gx, y: gy + gh + 0.28, w: gw, h: 0.25, fontFace: FONT, fontSize: 8, bold: true, color: COLOR.muted, align: 'center' });
+
+  // Eixo Y
+  const vw = 3.2, vh = 0.35;
+  slide.addText('↑ MAIS IMPACTO (5)  ·  EIXO Y: IMPACTO NO NEGÓCIO  ·  MENOS IMPACTO (1) ↓', {
+    x: gx - 0.45 - vw / 2 - vh / 2, y: gy + gh / 2 - vh / 2, w: vw, h: vh,
+    fontFace: FONT, fontSize: 8, bold: true, color: COLOR.muted, charSpacing: 1, align: 'center', valign: 'middle', rotate: 270
   });
 
   // Pontos ficam dentro da grade (não em cima da borda) e, se dois caem no mesmo lugar,
