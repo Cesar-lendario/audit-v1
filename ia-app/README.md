@@ -9,6 +9,7 @@ O público-alvo são fabricantes e transformadoras de veículos (motorhome, ambu
 ## Últimas Atualizações (Setembro/2026)
 - **Rebranding:** Substituição de `DeskcommCRM` por `Growthnow` em todo o código e templates gerados.
 - **Auditoria Otimizada:** Ajuste no escopo da entrevista (Ana) para focar estritamente em **comercial, margem/financeiro e pós-venda**, removendo engenharia e produção do escopo.
+- **Custo de Não Agir Direto e Sem Rodeios:** Unificação da pergunta do Bloco 3 na entrevista e substituição da evolução temporal (1-3m, 6-12m, 1-3a) no relatório por 3 dimensões diretas de impacto no negócio (*No Caixa e Vendas*, *Na Operação e Tempo*, *No Crescimento e Mercado*).
 - **Copy da Landing Page:** Atualização da comunicação na `index.html` para refletir as funcionalidades do Growthnow (Kanban, Agentes IA 24/7, Automação de follow-up) e o novo foco do diagnóstico.
 - **Cache de Prompts:** Implementação de `cache_control` (ephemeral) nas chamadas à API da Anthropic para reduzir custos de tokens.
 
@@ -353,7 +354,7 @@ Gera o relatório como um **JSON estruturado** com 3 partes:
 
 | Parte | Conteúdo |
 | :---: | -------- |
-| `part1` | Resumo executivo, mapa de perda, consequências, matriz de oportunidades (esforço × impacto), scoring de 5 soluções (S1–S5), dor geral, maturidade IA, WTP |
+| `part1` | Resumo executivo, mapa de perda, custo de não agir (Caixa, Operação, Crescimento), matriz de oportunidades (esforço × impacto), scoring de 5 soluções (S1–S5), dor geral, maturidade IA, WTP |
 | `part2` | Promessa central, plano de 5 dias (Quick Wins), projetos maiores, impacto financeiro (horas recuperadas, ROI, risco evitado, receita atribuída) |
 | `part3` | 3 níveis de oferta (DIY/DWY/DFY) com precificação calculada, garantia condicional |
 
